@@ -93,6 +93,7 @@ function onMessageHandler (target, context, msg, self) {
             let choobCommand = settings.commands.find((command) => command.command == "choob");
             choobCommand.settings.messages.push(choobString);
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+            client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "updatesettings":
@@ -105,10 +106,12 @@ function onMessageHandler (target, context, msg, self) {
             try {
                 settings = fs.readFileSync('settings.json');
                 settings = JSON.parse(settings);
+                client.say(target, "Choobs have been updated!");
                 console.log(`* Executed ${commandTriggered} command`);
             }
             catch(err){
                 console.log(err);
+                client.say(target, "Hmm, seems like a Choob got plugged along the way...");
             }
             break;
         default:
