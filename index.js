@@ -25,7 +25,7 @@ try {
 const webhook = require("webhook-discord");
 
 // Create a client with our options
-const client = new tmi.client(options);
+const client = new tmi.client(settings.connectionSettings);
 const _personalAliases = ["durok"];
 const _mcdmAliases = ["matt","mcdm"];
 const personalAliases = _personalAliases.join("|");
@@ -54,19 +54,61 @@ function onMessageHandler (target, context, msg, self) {
         return;
     }
     messageString = messageString.substr(1);
-    const commandTriggered = messageString.split(" ")[0];
-    //get the settings for the command
-    let commandsettings = settings.commands.find((commandsSettings, index) => commandsSettings.channel == target.substr(1));
-    if(commandsettings === undefined)
+    const commandTriggered = messageString.split(" ")[0].toLowerCase();
+    //get the settings for the channel
+    //let commandSettingsName = settings.commands.find((command) => command.name == commandTriggered);
+    let command = settings.commands.find((command) => command.channels.find((channel) => channel == target.substr(1)) && command.command == commandTriggered);
+    if(command === undefined)
+    {
+        console.log("command settings not found");
         return;
+    }
+        
+    if(commandTriggered)
     // If the command is known, let's execute it
     switch (commandTriggered){
         case "choob":
+            if(command.settings.currentlyListening === false){
+                break;
+            }
             if(lastCommandTime + cooldown < date.getTime()){
-                let i = commandsettings.choobSettings.messages.length;
-                let s = commandsettings.choobSettings.messages[Math.floor(Math.random() * i)];
+                let i = command.settings.messages.length;
+                let s = command.settings.messages[Math.floor(Math.random() * i)];
                 client.say(target, s);
                 console.log(`* Executed ${commandTriggered} command`);
+            }
+            break;
+        case "addchoob":
+            if(command.settings.currentlyListening === false){
+                break;
+            }
+            if(checkIfMod(context, target) === false){
+                break;
+            }
+            if(messageString.length < commandTriggered.length + 2){
+                break;
+            }
+            const choobString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
+
+            let choobCommand = settings.commands.find((command) => command.command == "choob");
+            choobCommand.settings.messages.push(choobString);
+            fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+            console.log(`* Executed ${commandTriggered} command`);
+            break;
+        case "updatesettings":
+            if(command.settings.currentlyListening === false){
+                break;
+            }
+            if(checkIfMod(context, target) === false){
+                break;
+            }
+            try {
+                settings = fs.readFileSync('settings.json');
+                settings = JSON.parse(settings);
+                console.log(`* Executed ${commandTriggered} command`);
+            }
+            catch(err){
+                console.log(err);
             }
             break;
         default:

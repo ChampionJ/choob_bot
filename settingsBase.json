@@ -1,0 +1,49 @@
+{
+    "connectionSettings": {
+        "options": {
+            "debug": true
+        },
+        "connection": {
+            "reconnect": true
+        },
+        "identity": {
+            "username": "",
+            "password": ""
+        },
+        "channels": [
+            ""
+        ]
+    },
+    "commands": [
+        {
+            "command": "updatesettings",
+            "channels": [
+                ""
+            ],
+            "settings": {
+                "currentlyListening": true
+            }
+        },
+        {
+            "command": "addchoob",
+            "channels": [
+                ""
+            ],
+            "settings": {
+                "currentlyListening": true
+            }
+        },
+        {
+            "command": "choob",
+            "channels": [
+                ""
+            ],
+            "settings": {
+                "currentlyListening": true,
+                "messages": [
+                    "Choob!"
+                ]
+            }
+        }
+    ]
+}
