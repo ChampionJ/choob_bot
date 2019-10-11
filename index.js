@@ -108,8 +108,8 @@ function onMessageHandler (target, context, msg, self) {
             }
             const choobString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
 
-            choobCommand = settings.commands.find((command) => command.command == "choob");
-            choobCommand.settings.messages.push(choobString);
+            let choobc = settings.commands.find((command) => command.command == "choob");
+            choobc.settings.messages.push(choobString);
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
             console.log(`* Executed ${commandTriggered} command`);

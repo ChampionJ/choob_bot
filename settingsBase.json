@@ -25,6 +25,15 @@
             }
         },
         {
+            "command": "choobcount",
+            "channels": [
+                ""
+            ],
+            "settings": {
+                "currentlyListening": true
+            }
+        },
+        {
             "command": "addchoob",
             "channels": [
                 ""
