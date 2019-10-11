@@ -34,7 +34,7 @@ const mcdmAliases = _mcdmAliases.join("|");
 let questionsOpen = false;
 let listenForMentions = true;
 let date = new Date();
-let cooldown = 500;
+let cooldown = 5000;
 let lastCommandTime = 0;
 
 
@@ -64,13 +64,15 @@ function onMessageHandler (target, context, msg, self) {
         return;
     }
         
-    if(commandTriggered)
+    if(command.settings.requiresMod === true){
+        if(checkIfMod(context, target) === false){
+            client.say(target, "@"+context["display-name"]+" you lack the correct Choob permissions to execute this command!");
+            return;
+        }
+    }
     // If the command is known, let's execute it
     switch (commandTriggered){
         case "choob":
-            if(command.settings.currentlyListening === false){
-                break;
-            }
             if(lastCommandTime + cooldown < date.getTime()){
                 let i = command.settings.messages.length;
                 let s = command.settings.messages[Math.floor(Math.random() * i)];
@@ -78,31 +80,56 @@ function onMessageHandler (target, context, msg, self) {
                 console.log(`* Executed ${commandTriggered} command`);
             }
             break;
+        case "choobcount":
+            if(lastCommandTime + cooldown < date.getTime()){
+                let choobCommand = settings.commands.find((command) => command.command == "choob");
+                let i = choobCommand.settings.messages.length;
+                client.say(target, "I have " + i + " Choobs!");
+                console.log(`* Executed ${commandTriggered} command`);
+            }
+            break;
+        case "togglechoob":
+            let choobCommand = settings.commands.find((command) => command.command == "choob");
+            let exists = choobCommand.channels.indexOf(target.substr(1));
+            if(exists >= 0){
+                choobCommand.channels.splice(exists, 1);
+                client.say(target, "!Choob has been disabled");
+                
+            } else {
+                choobCommand.channels.push(target.substr(1));
+                client.say(target, "!Choob has been enabled");
+            }
+            fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+            console.log(`* Executed ${commandTriggered} command`);
+            break;
         case "addchoob":
-            if(command.settings.currentlyListening === false){
-                break;
-            }
-            if(checkIfMod(context, target) === false){
-                break;
-            }
             if(messageString.length < commandTriggered.length + 2){
                 break;
             }
             const choobString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
 
-            let choobCommand = settings.commands.find((command) => command.command == "choob");
+            choobCommand = settings.commands.find((command) => command.command == "choob");
             choobCommand.settings.messages.push(choobString);
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
             console.log(`* Executed ${commandTriggered} command`);
             break;
+        case "removechoob":
+            if(messageString.length < commandTriggered.length + 2){
+                break;
+            }
+            const removalString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
+            let choobCommandInfo = settings.commands.find((command) => command.command == "choob");
+            
+            let i = choobCommandInfo.settings.messages.indexOf(removalString);
+            if(i != -1){
+                choobCommandInfo.settings.messages.splice(i, 1);
+                fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+                client.say(target, "Removed Choob: \""+removalString+"\" from the master Choob list!");
+                console.log(`* Executed ${commandTriggered} command`);
+            }
+            break;
         case "updatesettings":
-            if(command.settings.currentlyListening === false){
-                break;
-            }
-            if(checkIfMod(context, target) === false){
-                break;
-            }
             try {
                 settings = fs.readFileSync('settings.json');
                 settings = JSON.parse(settings);
