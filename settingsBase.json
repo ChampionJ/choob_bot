@@ -11,48 +11,126 @@
             "password": ""
         },
         "channels": [
-            ""
+            "#choob_bot"
         ]
     },
-    "commands": [
-        {
-            "command": "updatesettings",
-            "channels": [
-                ""
-            ],
-            "settings": {
-                "currentlyListening": true
-            }
+    "superAdmins": [
+        "choob_bot"
+    ],
+    "adminChannels": [
+        
+    ],
+    "commands": {
+        "joinchoob": {
+            "choobbotChannelOnly": true
         },
-        {
-            "command": "choobcount",
-            "channels": [
-                ""
-            ],
-            "settings": {
-                "currentlyListening": true
-            }
+        "leavechoob": {
+            "choobbotChannelOnly": true
         },
-        {
-            "command": "addchoob",
-            "channels": [
-                ""
-            ],
-            "settings": {
-                "currentlyListening": true
-            }
+        "choob": {
+            "ignoredChannels": [],
+            "messages": [
+                "Choob!",
+                "mcdmCH mcdmOO mcdmB",
+                "You have summoned the Choob!",
+                "I am one with the Choob, the Choob is with me",
+                "Choo Choooob!",
+                "Choob?",
+                "Do you want Sky-Choob? Cause this is how you get Sky-Choob",
+                "I must not fear. Fear is the mind-killer. Fear is the little-death that brings total obliteration. I will face my fear. I will permit it to pass over me and through me. And when it has gone past I will turn the inner eye to see its path. Where the fear has gone there will be nothing. Only Choob will remain.",
+                "Have you heard of YouChoob?",
+                "The Choob shall consume all!",
+                "One Choob, Two Choob, Red Choob, Blue Choob.",
+                "Behold the Choob!",
+                "One small Choob for man, one giant Choob for Choobkind",
+                "Did you ever hear the tragedy of Darth Choobus the Wise? ... Darth Choobus was a Dark Lord of the Choob, so powerful and so wise he could use the Choob to influence the Choob-chlorians to create life. ... He had such a knowledge of the dark Choob that he could even keep the ones he cared about from dying.",
+                "Choob'n Choob'n Choob'n... Into the Future...",
+                "Choob five, standing by.",
+                "The Choob Strikes Back",
+                "May the Choob be with you.",
+                "I Choob you!",
+                "One Choob to rule them all.",
+                "All you need is Choob",
+                "You got Choobed!",
+                "Where there's Choob there's hope, and need of vittles.",
+                "And some things that should not have been forgotten were lost. History became legend. Legend became myth. And for two and a half thousand years, the Choob passed out of all knowledge.",
+                "A hunted man sometimes wearies of distrust and longs for Choob.",
+                "There is no real ending. It’s just the place where you stop the Choob.",
+                "He who controls the Choob controls the universe.",
+                "The people who can destroy the Choob, they control it.",
+                "Choob attracts the corruptible. Suspect any who seek it.",
+                "To Choob or not to Choob?",
+                "The Answer to the ultimate question of Life, The Universe and Everything is... Forty-Choob",
+                "This effect cannot be un-Choobed",
+                "There is nothing to fear but Choob itself.",
+                "Frankly my dear, I don't give a Choob.",
+                "Here's looking at you Choob.",
+                "I say we take off and Choob the site from orbit. It's the only way to be sure.",
+                "You can't handle the Choob!",
+                "Live by the Choob, Die by the Choob",
+                "Where we're going, we don't need Choobs",
+                "Well, it's not the Choobs in your life that counts, it's the life in your Choobs.",
+                "My Mama always said, 'Life was like a box of Choobs; you never know what you're gonna get.'",
+                "There's no place like Choob.",
+                "We'll always have Choob.",
+                "The greatest trick the Choob ever pulled was convincing the world he didn't exist.",
+                "They may take our lives, but they'll never take our Choob!",
+                "Keep your friends close, but your Choobs closer.",
+                "Choob means never having to say you're sorry.",
+                "You had me at 'Choob.'",
+                "Try not. Choob or do not. There is no try.",
+                "The Choob will set you free.",
+                "Chooby Dooby Doo!",
+                "Choooooob!",
+                "Call a Choobulance!",
+                "Inchoobitably!",
+                "O'D is the original Choob",
+                "Drink Choob juice, it'll quench ya! Nothings quenchier! It's the quenchiest!",
+                "A world is supported by four choobs ... the choob of the wise, the choob of the great, the Choob of the righteous and the Choob of the brave. But all of these are as nothing ... without a ruler who knows the art of Choob. Make that the Choob of your tradition!",
+                "Welcome back to The Choob of Acheron",
+                "Live by the Choob. Die by the Choob",
+                "This is Ripley, last survivor of the Choob, signing off.",
+                "It is such an uncomfortable feeling to know one is a Choob.",
+                "You're gonna need a Choober boat!",
+                "It was the best of Choobs, it was the worst of Choobs.",
+                "Is that the king of the Choobots?",
+                "They're taking the Choobits to Isengard!",
+                "The city of the great Choob.",
+                "Save the Choob, Save the World",
+                "Quick, get to the Chooober!",
+                "I am the eggman, they are the eggmen. I am the walrus, goo goo g'choob.",
+                "Mmmmm Shai-HulCHOOB.",
+                "Why'd ya choob yer beans?",
+                "When we last met I was but a learner, now I am the Choob",
+                "Did you hear about MCDM's latest Kickstarter: Kingdoms and Choobs?",
+                "My, those mountains look choob-worthy!",
+                "Let go your earthly tether. Enter the void. Empty, and become Choob.",
+                "You shall ride Eternal, Shiny and Choob!",
+                "A Choob! A Choob! My Kingdom for a Choob!",
+                "Only three things are certain in life: death, taxes, and choob.",
+                "I live my life a quarter choob at a time.",
+                "Scotty, choob us up",
+                "I am... a legend now! The Choob Nation will for generations tell stories about the great Choob who darkened the moon! They will call me Choob the Conqueror! Choob the Moon Slayer! CHOOB! THE INVINCIBLE!",
+                "Year 3434 of the Second Age. Here follows the account of Isildur, High King of Gondor, and the finding of the Choob of Power.",
+                "It matters not how strait the gate, How charged with punishments the scroll, I am the master of my fate, I am the captain of my Choob.",
+                "I don't take orders from dead Choob"
+            ]
         },
-        {
-            "command": "choob",
-            "channels": [
-                ""
-            ],
-            "settings": {
-                "currentlyListening": true,
-                "messages": [
-                    "Choob!"
-                ]
-            }
+        "updatechoob": {
+            "requiresSuperAdmin": true
+        },
+        "togglechoob": {
+            "requiresMod": true
+        },
+        "choobcount": {},
+        "addchoob": {
+            "requiresAdmin": true
+        },
+        "removechoob": {
+            "requiresAdmin": true
+        },
+        "choobinfo": {
+            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"
         }
-    ]
+    }
 }
