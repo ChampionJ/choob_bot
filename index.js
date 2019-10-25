@@ -53,7 +53,7 @@ function onMessageHandler (target, context, msg, self) {
         return;
     }
     messageString = messageString.substr(1);
-    const commandTriggered = messageString.split(" ")[0].toLowerCase();
+    const commandTriggered = messageString.split(" ")[0].toLowerCase().replace(/-/g,"");
     //get the settings for the channel
     //let commandSettingsName = settings.commands.find((command) => command.name == commandTriggered);
     let command = settings.commands[commandTriggered];
