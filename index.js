@@ -134,7 +134,7 @@ function onMessageHandler (target, context, msg, self) {
             break;
         case "choobinfo":
             if(lastCommandTime + cooldown < date.getTime()){
-                let info = command.settings.message;
+                let info = command.message;
                 client.say(target, info);
                 console.log(`* Executed ${commandTriggered} command`);
             }
