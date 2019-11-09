@@ -20,6 +20,9 @@
     "adminChannels": [
         
     ],
+    "aliases": {
+        "chooborigin": "choobinfo"
+    },
     "commands": {
         "joinchoob": {
             "choobbotChannelOnly": true

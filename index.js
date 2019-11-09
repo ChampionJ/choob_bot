@@ -53,13 +53,20 @@ function onMessageHandler (target, context, msg, self) {
         return;
     }
     messageString = messageString.substr(1);
-    const commandTriggered = messageString.split(" ")[0].toLowerCase().replace(/-/g,"");
-    //get the settings for the channel
-    //let commandSettingsName = settings.commands.find((command) => command.name == commandTriggered);
+    const commandTriggeredRAW = messageString.split(" ")[0].toLowerCase().replace(/-/g,"");
+    let commandTriggered = commandTriggeredRAW;
+    
     let command = settings.commands[commandTriggered];
     if(command === undefined){
-        console.log("command not found");
-        return;
+        let alias = settings.aliases[commandTriggered];
+        if(alias === undefined){
+            console.log("command not found");
+            return;
+        } else {
+            console.log("alias found");
+            command = settings.commands[alias];
+            commandTriggered = alias;
+        }
     }
     if(command.choobbotChannelOnly === true){
         if(checkIfChoobbotChannel(target) === false){
@@ -87,7 +94,6 @@ function onMessageHandler (target, context, msg, self) {
             }
         }
     }
-    
     switch(commandTriggered){
         case "choob":
             if(command.ignoredChannels.includes(target))
@@ -154,10 +160,10 @@ function onMessageHandler (target, context, msg, self) {
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "addchoob":
-            if(messageString.length < commandTriggered.length + 2){
+            if(messageString.length < commandTriggeredRAW.length + 2){
                 break;
             }
-            const choobString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
+            const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
             let choobc = settings.commands.choob;
             choobc.messages.push(choobString);
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
@@ -165,10 +171,10 @@ function onMessageHandler (target, context, msg, self) {
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "removechoob":
-            if(messageString.length < commandTriggered.length + 2){
+            if(messageString.length < commandTriggeredRAW.length + 2){
                 break;
             }
-            const removalString = messageString.substr(commandTriggered.length + 1); //remove commnad name and first space
+            const removalString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
             let choobCommandInfo = settings.commands.choob;
             
             let i = choobCommandInfo.messages.indexOf(removalString);
