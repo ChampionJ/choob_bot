@@ -1,15 +1,8 @@
-const {
-    performance,
-    PerformanceObserver
-} = require('perf_hooks');
 const tmi = require("tmi.js");
-const options = require("./options");
 const fs = require('fs');
-
 const settingsPath = "settings.json";
-
+//Grab settings, or create them from Base
 let settings;
-//check settings
 try {
     if(fs.existsSync(settingsPath)){
         settings = fs.readFileSync('settings.json');
@@ -27,20 +20,11 @@ try {
 } catch(err){
     console.log(err);
 }
-
-const webhook = require("webhook-discord");
-
-// Create a client with our options
+//create twitch client
 const client = new tmi.client(settings.connectionSettings);
-let date = new Date();
-let cooldown = 5000;
-let lastCommandTime = 0;
-
-
-// Register our event handlers (defined below)
+// Register our event handlers
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
-
 // Connect to Twitch:
 client.connect();
 
@@ -98,12 +82,10 @@ function onMessageHandler (target, context, msg, self) {
         case "choob":
             if(command.ignoredChannels.includes(target))
                 break;
-            if(lastCommandTime + cooldown < date.getTime()){
-                let i = command.messages.length;
-                let s = command.messages[Math.floor(Math.random() * i)];
-                client.say(target, s);
-                console.log(`* Executed ${commandTriggered} command`);
-            }
+            let choobIndex = command.messages.length;
+            let choobQuote = command.messages[Math.floor(Math.random() * choobIndex)];
+            client.say(target, choobQuote);
+            console.log(`* Executed ${commandTriggered} command`);
             break;
         case "joinchoob": {
             let channelstring = "#" + context.username;
@@ -120,9 +102,9 @@ function onMessageHandler (target, context, msg, self) {
         }
         case "leavechoob": {
             const removalChannel = "#" + context.username;
-            let i = settings.connectionSettings.channels.indexOf(removalChannel);
-            if(i != -1){
-                settings.connectionSettings.channels.splice(i, 1);
+            let removalChannelIndex = settings.connectionSettings.channels.indexOf(removalChannel);
+            if(removalChannelIndex != -1){
+                settings.connectionSettings.channels.splice(removalChannelIndex, 1);
                 fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, "Choob Bot has left your channel...");
                 client.part(removalChannel);
@@ -131,29 +113,22 @@ function onMessageHandler (target, context, msg, self) {
             break;
         }
         case "choobcount":
-            if(lastCommandTime + cooldown < date.getTime()){
-                let choobCommand = settings.commands.choob;
-                let i = choobCommand.messages.length;
-                client.say(target, "I have " + i + " Choobs!");
-                console.log(`* Executed ${commandTriggered} command`);
-            }
+            let choobCount = settings.commands.choob.messages.length;
+            client.say(target, "I have " + choobCount + " Choobs!");
+            console.log(`* Executed ${commandTriggered} command`); 
             break;
         case "choobinfo":
-            if(lastCommandTime + cooldown < date.getTime()){
-                let info = command.message;
-                client.say(target, info);
-                console.log(`* Executed ${commandTriggered} command`);
-            }
+            let info = command.message;
+            client.say(target, info);
+            console.log(`* Executed ${commandTriggered} command`);
             break;
         case "togglechoob":
-            let choobCommand = settings.commands.choob;
             let exists = choobCommand.ignoredChannels.indexOf(target);
             if(exists >= 0){
-                choobCommand.ignoredChannels.splice(exists, 1);
+                settings.commands.choob.ignoredChannels.splice(exists, 1);
                 client.say(target, "!Choob has been enabled");
-                
             } else {
-                choobCommand.ignoredChannels.push(target);
+                settings.commands.choob.ignoredChannels.push(target);
                 client.say(target, "!Choob has been disabled");
             }
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
@@ -164,8 +139,7 @@ function onMessageHandler (target, context, msg, self) {
                 break;
             }
             const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
-            let choobc = settings.commands.choob;
-            choobc.messages.push(choobString);
+            settings.commands.choob.messages.push(choobString);
             fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
             console.log(`* Executed ${commandTriggered} command`);
@@ -175,11 +149,9 @@ function onMessageHandler (target, context, msg, self) {
                 break;
             }
             const removalString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
-            let choobCommandInfo = settings.commands.choob;
-            
-            let i = choobCommandInfo.messages.indexOf(removalString);
-            if(i != -1){
-                choobCommandInfo.messages.splice(i, 1);
+            let removalIndex = settings.commands.choob.messages.indexOf(removalString);
+            if(removalIndex != -1){
+                settings.commands.choob.messages.splice(removalIndex, 1);
                 fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, "Removed Choob: \""+removalString+"\" from the master Choob list!");
                 console.log(`* Executed ${commandTriggered} command`);
