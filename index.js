@@ -123,7 +123,7 @@ function onMessageHandler (target, context, msg, self) {
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "togglechoob":
-            let exists = choobCommand.ignoredChannels.indexOf(target);
+            let exists = settings.commands.choob.ignoredChannels.indexOf(target);
             if(exists >= 0){
                 settings.commands.choob.ignoredChannels.splice(exists, 1);
                 client.say(target, "!Choob has been enabled");
