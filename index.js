@@ -117,6 +117,10 @@ function onMessageHandler (target, context, msg, self) {
             client.say(target, "I have " + choobCount + " Choobs!");
             console.log(`* Executed ${commandTriggered} command`); 
             break;
+        case "choobhelp":
+            client.say(target, command.message);
+            console.log(`* Executed ${commandTriggered} command`); 
+            break;
         case "choobinfo":
             let info = command.message;
             client.say(target, info);
