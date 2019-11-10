@@ -30,3 +30,5 @@ Choob_Bot is a Twitch chat bot created for the MCDM community.
 - !update-choob
   - Manually triggers an update pull of the settings.json file
   - Can only be triggered by a Super Admin
+
+hyphens are optional
