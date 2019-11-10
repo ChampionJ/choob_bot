@@ -8,17 +8,22 @@
         },
         "identity": {
             "username": "",
-            "password": ""
+            "password": "oauth:"
         },
         "channels": [
-            "#choob_bot"
+            "#mcdm",
+            "#choob_bot",
+            "#coolhandraymond",
+            "#lord_durok"
         ]
     },
     "superAdmins": [
         "choob_bot"
     ],
     "adminChannels": [
-        
+        "#mcdm",
+        "#lord_durok",
+        "#choob_bot"
     ],
     "aliases": {
         "chooborigin": "choobinfo"
@@ -29,6 +34,26 @@
         },
         "leavechoob": {
             "choobbotChannelOnly": true
+        },
+        "updatechoob": {
+            "requiresSuperAdmin": true
+        },
+        "togglechoob": {
+            "requiresMod": true
+        },
+        "choobcount": {},
+        "choobchannels": {},
+        "addchoob": {
+            "requiresAdmin": true
+        },
+        "removechoob": {
+            "requiresAdmin": true
+        },
+        "choobinfo": {
+            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"
+        },
+        "choobhelp": {
+            "message": "For a list of commands head to my channel! https://www.twitch.tv/choob_bot"
         },
         "choob": {
             "ignoredChannels": [],
@@ -58,7 +83,7 @@
                 "Where there's Choob there's hope, and need of vittles.",
                 "And some things that should not have been forgotten were lost. History became legend. Legend became myth. And for two and a half thousand years, the Choob passed out of all knowledge.",
                 "A hunted man sometimes wearies of distrust and longs for Choob.",
-                "There is no real ending. It’s just the place where you stop the Choob.",
+                "There is no real ending. Itâ€™s just the place where you stop the Choob.",
                 "He who controls the Choob controls the universe.",
                 "The people who can destroy the Choob, they control it.",
                 "Choob attracts the corruptible. Suspect any who seek it.",
@@ -116,24 +141,40 @@
                 "I am... a legend now! The Choob Nation will for generations tell stories about the great Choob who darkened the moon! They will call me Choob the Conqueror! Choob the Moon Slayer! CHOOB! THE INVINCIBLE!",
                 "Year 3434 of the Second Age. Here follows the account of Isildur, High King of Gondor, and the finding of the Choob of Power.",
                 "It matters not how strait the gate, How charged with punishments the scroll, I am the master of my fate, I am the captain of my Choob.",
-                "I don't take orders from dead Choob"
+                "You must choose, but choose wisely. For as the true Choob will bring you life, the false Choob will take it from you.",
+                "I don't take orders from dead Choobs",
+                "He's become a being of pure choob now",
+                "Spy choob?",
+                "Nature and Choob belong to the eyes that see them",
+                "Once more unto the breach, dear choobs, once more",
+                "It's dangerous to go alone! Take Choob.",
+                "Everything has choob, but not everyone sees it.",
+                "What's a timber man want with being a choob?",
+                "I think, therefore I Choob.",
+                "Happy Chooboween!",
+                "So this is how choob diesâ€”with thunderous applause.",
+                "Seabirds are the souls of lost choobs",
+                "OK, choober",
+                "Always my choob hungered for less than it had",
+                "Those who do not know the danger of wielding choob will, before long, be ruled by it. Never forget that.",
+                "Messages from the Choob can be found everywhere; as long as you know where to look.",
+                "The world is indeed full of peril and in it there are many dark choobs.",
+                "Do not let the behavior of others destroy your inner choob.",
+                "One who conquers choob cannot be conquered by anyone.",
+                "Reputation is what other people know about you. Choob is what you know about yourself.",
+                "I know now that no one can give you your choob. Itâ€™s something you earn for yourself by choosing to do whatâ€™s right.",
+                "Sometimes a feeling is all we choobs have to go on.",
+                "One man with choob is a majority.",
+                "Look, everybody wants choob. That's the way the world is.",
+                "Let go your earthly tether. Enter the void. Empty and become choob.",
+                "I find hope in the darkest of days, and focus in the brightest. I do not judge the choob.",
+                "So this is how choob diesâ€”with thunderous applause.",
+                "One can have no smaller or greater mastery than mastery of choob.",
+                "Real choob is doing the right thing, knowing that nobody's going to know whether you did it or not.",
+                "I used to be a choob like you, till I took an arrow to the knee.",
+                "Some choobs are bigger than other choobs...",
+                "Compassion is the basis of choob"
             ]
-        },
-        "updatechoob": {
-            "requiresSuperAdmin": true
-        },
-        "togglechoob": {
-            "requiresMod": true
-        },
-        "choobcount": {},
-        "addchoob": {
-            "requiresAdmin": true
-        },
-        "removechoob": {
-            "requiresAdmin": true
-        },
-        "choobinfo": {
-            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"
         }
     }
 }
