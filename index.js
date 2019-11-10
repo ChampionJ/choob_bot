@@ -1,11 +1,12 @@
 const tmi = require("tmi.js");
 const fs = require('fs');
 const settingsPath = "settings.json";
+const secretsPath = "secrets.json";
 //Grab settings, or create them from Base
 let settings;
 try {
     if(fs.existsSync(settingsPath)){
-        settings = fs.readFileSync('settings.json');
+        settings = fs.readFileSync(settingsPath);
         settings = JSON.parse(settings);
     } else {
         if(fs.existsSync('settingsBase.json')){
@@ -20,8 +21,24 @@ try {
 } catch(err){
     console.log(err);
 }
+
+let secrets;
+try {
+    if(fs.existsSync(secretsPath)){
+        secrets = fs.readFileSync(secretsPath);
+        secrets = JSON.parse(secrets);
+    } else {
+        console.log("Error, could not find secrets!");
+        return;
+    }
+} catch(err){
+    console.log(err);
+}
+
+let connectionSettings = settings.connectionSettings;
+connectionSettings.identity = secrets.identity;
 //create twitch client
-const client = new tmi.client(settings.connectionSettings);
+const client = new tmi.client(connectionSettings);
 // Register our event handlers
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
