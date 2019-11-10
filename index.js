@@ -62,18 +62,18 @@ function onMessageHandler (target, context, msg, self) {
     
     if(!isUserSuperAdmin){
         if(command.requiresSuperAdmin === true){
-            client.say(target, "@"+context["display-name"]+" you lack the correct Choobs to execute this command!");
+            client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
             return;
         }
         if(command.requiresAdmin === true){
             if(checkIfAdmin(context, target) === false){
-                client.say(target, "@"+context["display-name"]+" you lack the correct Choobs to execute this command!");
+                client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
                 return;
             }
         }
         if(command.requiresMod === true){
             if(checkIfMod(context, target) === false){
-                client.say(target, "@"+context["display-name"]+" you lack the correct Choobs to execute this command!");
+                client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
                 return;
             }
         }
