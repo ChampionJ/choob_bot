@@ -10,6 +10,8 @@ Choob_Bot is a Twitch chat bot created for the MCDM community.
   - Responds with the current number of choob quotes in the settings.json file
 - !choob-info
   - Responds with a blurb about how "choob" originated
+- !choob-channels
+  - Responds with the current number of channels the bot is active in
 - !join-choob
   - Have Choob_Bot join your Twitch channel
   - Must be triggered in the Choob_Bot Twitch channel
