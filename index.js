@@ -112,9 +112,14 @@ function onMessageHandler (target, context, msg, self) {
             }
             break;
         }
+        case "choobchannels":
+            let channelCount = settings.connectionSettings.channels.length;
+            client.say(target, "There are " + channelCount + " members of the Choob Continuum");
+            console.log(`* Executed ${commandTriggered} command`); 
+            break;
         case "choobcount":
             let choobCount = settings.commands.choob.messages.length;
-            client.say(target, "I have " + choobCount + " Choobs!");
+            client.say(target, "There are " + choobCount + " choobs in the database!");
             console.log(`* Executed ${commandTriggered} command`); 
             break;
         case "choobhelp":
