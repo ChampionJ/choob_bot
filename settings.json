@@ -2,6 +2,7 @@
     "superAdmins": [
         "choob_bot"
     ],
+    "permissionLackingMessage":"@{name} you lack the choob needed to execute this command!",
     "adminChannels": [
         "#mcdm",
         "#lord_durok",
@@ -12,24 +13,38 @@
     },
     "commands": {
         "joinchoob": {
-            "choobbotChannelOnly": true
+            "choobbotChannelOnly": true,
+            "joinMessage":"Choob Bot has joined your channel!",
+            "existsMessage":"Choob Bot is already in your channel!"
         },
         "leavechoob": {
-            "choobbotChannelOnly": true
+            "choobbotChannelOnly": true,
+            "leaveMessage":"Choob Bot has left your channel...",
+            "errorMessage":"Choob Bot was not in your channel"
         },
         "updatechoob": {
-            "requiresSuperAdmin": true
+            "requiresSuperAdmin": true,
+            "successMessage": "Choobs have been updated!",
+            "failMessage":"Hmm, seems like a Choob got plugged along the way..."
         },
         "togglechoob": {
-            "requiresMod": true
+            "requiresMod": true,
+            "onMessage":"!Choob has been enabled",
+            "offMessage": "!Choob has been disabled"
         },
-        "choobcount": {},
-        "choobchannels": {},
+        "choobcount": { 
+            "message": "There are {count} choobs in the database!"
+        },
+        "choobchannels": {
+            "message": "There are {count} members of the Choob Continuum"
+        },
         "addchoob": {
-            "requiresAdmin": true
+            "requiresAdmin": true,
+            "message":"Added Choob: \"{msg}\" to the master Choob list!"
         },
         "removechoob": {
-            "requiresAdmin": true
+            "requiresAdmin": true,
+            "message":"Removed Choob: \"{msg}\" from the master Choob list!"
         },
         "choobinfo": {
             "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"

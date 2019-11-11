@@ -84,18 +84,18 @@ function onMessageHandler (target, context, msg, self) {
     
     if(!isUserSuperAdmin){
         if(command.requiresSuperAdmin === true){
-            client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
+            client.say(target, settings.permissionLackingMessage.replace('{name}',context["display-name"]));
             return;
         }
         if(command.requiresAdmin === true){
             if(checkIfAdmin(context, target) === false){
-                client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
+                client.say(target, settings.permissionLackingMessage.replace('{name}',context["display-name"]));
                 return;
             }
         }
         if(command.requiresMod === true){
             if(checkIfMod(context, target) === false){
-                client.say(target, "@"+context["display-name"]+" you lack the choob neeeded to execute this command!");
+                client.say(target, settings.permissionLackingMessage.replace('{name}',context["display-name"]));
                 return;
             }
         }
@@ -112,11 +112,11 @@ function onMessageHandler (target, context, msg, self) {
         case "joinchoob": {
             let channelstring = "#" + context.username;
             if(localdata.connectionSettings.channels.includes(channelstring)){
-                client.say(target, "Choob Bot is already in your channel!");
+                client.say(target, command.existsMessage);
             } else {
                 localdata.connectionSettings.channels.push(channelstring);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-                client.say(target, "Choob Bot has joined your channel!");
+                client.say(target, command.joinMessage);
                 client.join(channelstring);
             }
             console.log(`* Executed ${commandTriggered} command`);
@@ -128,7 +128,7 @@ function onMessageHandler (target, context, msg, self) {
             if(removalChannelIndex != -1){
                 localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-                client.say(target, "Choob Bot has left your channel...");
+                client.say(target, command.errorMessage);
                 client.part(removalChannel);
                 console.log(`* Executed ${commandTriggered} command`);
             }
@@ -136,12 +136,12 @@ function onMessageHandler (target, context, msg, self) {
         }
         case "choobchannels":
             let channelCount = localdata.connectionSettings.channels.length;
-            client.say(target, "There are " + channelCount + " members of the Choob Continuum");
+            client.say(target, command.message.replace('{count}',channelCount));
             console.log(`* Executed ${commandTriggered} command`); 
             break;
         case "choobcount":
             let choobCount = localdata.choob.messages.length;
-            client.say(target, "There are " + choobCount + " choobs in the database!");
+            client.say(target, command.message.replace('{count}',choobCount));
             console.log(`* Executed ${commandTriggered} command`); 
             break;
         case "choobhelp":
@@ -157,10 +157,10 @@ function onMessageHandler (target, context, msg, self) {
             let exists = localdata.choob.ignoredTwitchChannels.indexOf(target);
             if(exists >= 0){
                 localdata.choob.ignoredTwitchChannels.splice(exists, 1);
-                client.say(target, "!Choob has been enabled");
+                client.say(target, command.onMessage);
             } else {
                 localdata.choob.ignoredTwitchChannels.push(target);
-                client.say(target, "!Choob has been disabled");
+                client.say(target, command.offMessage);
             }
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
             console.log(`* Executed ${commandTriggered} command`);
@@ -172,7 +172,7 @@ function onMessageHandler (target, context, msg, self) {
             const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
             localdata.choob.messages.push(choobString);
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-            client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
+            client.say(target, command.message.replace('{msg}',choobString));
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "removechoob":
@@ -184,7 +184,7 @@ function onMessageHandler (target, context, msg, self) {
             if(removalIndex != -1){
                 localdata.choob.messages.splice(removalIndex, 1);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-                client.say(target, "Removed Choob: \""+removalString+"\" from the master Choob list!");
+                client.say(target, command.message.replace('{msg}',removalString));
                 console.log(`* Executed ${commandTriggered} command`);
             }
             break;
@@ -192,12 +192,12 @@ function onMessageHandler (target, context, msg, self) {
             try {
                 localdata = fs.readFileSync(localdataPath);
                 localdata = JSON.parse(localdata);
-                client.say(target, "Choobs have been updated!");
+                client.say(target, command.successMessage);
                 console.log(`* Executed ${commandTriggered} command`);
             }
             catch(err){
                 console.log(err);
-                client.say(target, "Hmm, seems like a Choob got plugged along the way...");
+                client.say(target, command.failMessage);
             }
             break;
         default:
