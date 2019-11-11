@@ -1,6 +1,7 @@
 const tmi = require("tmi.js");
 const fs = require('fs');
 const settingsPath = "settings.json";
+const localdataPath = "localdata.json";
 //Grab settings, or create them from Base
 let settings;
 try {
@@ -21,8 +22,28 @@ try {
     console.log(err);
 }
 
+let localdata;
+try {
+    if(fs.existsSync(localdataPath)){
+        localdata = fs.readFileSync(localdataPath);
+        localdata = JSON.parse(localdata);
+    } else {
+        if(fs.existsSync('localdataBase.json')){
+            localdata = fs.readFileSync('localdataBase.json');
+            localdata = JSON.parse(localdata);
+            fs.writeFileSync(localdataPath, JSON.stringify(localdata, null, 4));
+            console.log("Error, could not find local settings! Generating new");
+        }
+        else{
+            console.log("Error, could not find local settings!");
+        }
+    }
+} catch(err){
+    console.log(err);
+}
+
 //create twitch client
-const client = new tmi.client(settings.connectionSettings);
+const client = new tmi.client(localdata.connectionSettings);
 // Register our event handlers
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
@@ -81,20 +102,20 @@ function onMessageHandler (target, context, msg, self) {
     }
     switch(commandTriggered){
         case "choob":
-            if(command.ignoredChannels.includes(target))
+            if(localdata.choob.ignoredTwitchChannels.includes(target))
                 break;
-            let choobIndex = command.messages.length;
-            let choobQuote = command.messages[Math.floor(Math.random() * choobIndex)];
+            let choobIndex = localdata.choob.messages.length;
+            let choobQuote = localdata.choob.messages[Math.floor(Math.random() * choobIndex)];
             client.say(target, choobQuote);
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "joinchoob": {
             let channelstring = "#" + context.username;
-            if(settings.connectionSettings.channels.includes(channelstring)){
+            if(localdata.connectionSettings.channels.includes(channelstring)){
                 client.say(target, "Choob Bot is already in your channel!");
             } else {
-                settings.connectionSettings.channels.push(channelstring);
-                fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+                localdata.connectionSettings.channels.push(channelstring);
+                fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, "Choob Bot has joined your channel!");
                 client.join(channelstring);
             }
@@ -103,10 +124,10 @@ function onMessageHandler (target, context, msg, self) {
         }
         case "leavechoob": {
             const removalChannel = "#" + context.username;
-            let removalChannelIndex = settings.connectionSettings.channels.indexOf(removalChannel);
+            let removalChannelIndex = localdata.connectionSettings.channels.indexOf(removalChannel);
             if(removalChannelIndex != -1){
-                settings.connectionSettings.channels.splice(removalChannelIndex, 1);
-                fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+                localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
+                fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, "Choob Bot has left your channel...");
                 client.part(removalChannel);
                 console.log(`* Executed ${commandTriggered} command`);
@@ -114,12 +135,12 @@ function onMessageHandler (target, context, msg, self) {
             break;
         }
         case "choobchannels":
-            let channelCount = settings.connectionSettings.channels.length;
+            let channelCount = localdata.connectionSettings.channels.length;
             client.say(target, "There are " + channelCount + " members of the Choob Continuum");
             console.log(`* Executed ${commandTriggered} command`); 
             break;
         case "choobcount":
-            let choobCount = settings.commands.choob.messages.length;
+            let choobCount = localdata.choob.messages.length;
             client.say(target, "There are " + choobCount + " choobs in the database!");
             console.log(`* Executed ${commandTriggered} command`); 
             break;
@@ -133,15 +154,15 @@ function onMessageHandler (target, context, msg, self) {
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "togglechoob":
-            let exists = settings.commands.choob.ignoredChannels.indexOf(target);
+            let exists = localdata.choob.ignoredTwitchChannels.indexOf(target);
             if(exists >= 0){
-                settings.commands.choob.ignoredChannels.splice(exists, 1);
+                localdata.choob.ignoredTwitchChannels.splice(exists, 1);
                 client.say(target, "!Choob has been enabled");
             } else {
-                settings.commands.choob.ignoredChannels.push(target);
+                localdata.choob.ignoredTwitchChannels.push(target);
                 client.say(target, "!Choob has been disabled");
             }
-            fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+            fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
             console.log(`* Executed ${commandTriggered} command`);
             break;
         case "addchoob":
@@ -149,8 +170,8 @@ function onMessageHandler (target, context, msg, self) {
                 break;
             }
             const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
-            settings.commands.choob.messages.push(choobString);
-            fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+            localdata.choob.messages.push(choobString);
+            fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, "Added Choob: \""+choobString+"\" to the master Choob list!");
             console.log(`* Executed ${commandTriggered} command`);
             break;
@@ -159,18 +180,18 @@ function onMessageHandler (target, context, msg, self) {
                 break;
             }
             const removalString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
-            let removalIndex = settings.commands.choob.messages.indexOf(removalString);
+            let removalIndex = localdata.choob.messages.indexOf(removalString);
             if(removalIndex != -1){
-                settings.commands.choob.messages.splice(removalIndex, 1);
-                fs.writeFile(settingsPath, JSON.stringify(settings, null, 4), (e) => {if(e != null)console.log(e);});
+                localdata.choob.messages.splice(removalIndex, 1);
+                fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, "Removed Choob: \""+removalString+"\" from the master Choob list!");
                 console.log(`* Executed ${commandTriggered} command`);
             }
             break;
         case "updatechoob":
             try {
-                settings = fs.readFileSync('settings.json');
-                settings = JSON.parse(settings);
+                localdata = fs.readFileSync(localdataPath);
+                localdata = JSON.parse(localdata);
                 client.say(target, "Choobs have been updated!");
                 console.log(`* Executed ${commandTriggered} command`);
             }

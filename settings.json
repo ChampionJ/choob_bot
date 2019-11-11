@@ -1,0 +1,44 @@
+{
+    "superAdmins": [
+        "choob_bot"
+    ],
+    "adminChannels": [
+        "#mcdm",
+        "#lord_durok",
+        "#choob_bot"
+    ],
+    "aliases": {
+        "chooborigin": "choobinfo"
+    },
+    "commands": {
+        "joinchoob": {
+            "choobbotChannelOnly": true
+        },
+        "leavechoob": {
+            "choobbotChannelOnly": true
+        },
+        "updatechoob": {
+            "requiresSuperAdmin": true
+        },
+        "togglechoob": {
+            "requiresMod": true
+        },
+        "choobcount": {},
+        "choobchannels": {},
+        "addchoob": {
+            "requiresAdmin": true
+        },
+        "removechoob": {
+            "requiresAdmin": true
+        },
+        "choobinfo": {
+            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"
+        },
+        "choobhelp": {
+            "message": "For a list of commands head to my channel! https://www.twitch.tv/choob_bot"
+        },
+        "choob": {
+            
+        }
+    }
+}

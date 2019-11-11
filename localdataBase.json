@@ -1,0 +1,21 @@
+{
+    "connectionSettings": {
+        "options": {
+            "debug": true
+        },
+        "connection": {
+            "reconnect": true
+        },
+        "identity": {
+            "username": "",
+            "password": "oauth:"
+        },
+        "channels": [
+            "#choob_bot"
+        ]
+    },
+    "choob":{
+        "ignoredTwitchChannels": [],
+        "messages": []
+    }
+}
