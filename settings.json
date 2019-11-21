@@ -1,6 +1,7 @@
 {
     "superAdmins": [
-        "choob_bot"
+        "choob_bot",
+        "#lord_durok"
     ],
     "permissionLackingMessage":"@{name} you lack the choob needed to execute this command!",
     "adminChannels": [
