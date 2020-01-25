@@ -30,8 +30,8 @@
         },
         "togglechoob": {
             "requiresMod": true,
-            "onMessage":"!Choob has been enabled",
-            "offMessage": "!Choob has been disabled"
+            "onMessage":"!Choob command has been enabled in this channel",
+            "offMessage": "!Choob command has been disabled in this channel"
         },
         "choobcount": { 
             "message": "There are {count} choobs in the database!"
@@ -41,14 +41,14 @@
         },
         "addchoob": {
             "requiresAdmin": true,
-            "message":"Added Choob: \"{msg}\" to the master Choob list!"
+            "message":"Added: \"{msg}\" to the master Choob list!"
         },
         "removechoob": {
             "requiresAdmin": true,
-            "message":"Removed Choob: \"{msg}\" from the master Choob list!"
+            "message":"Removed: \"{msg}\" from the master Choob list!"
         },
         "choobinfo": {
-            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of codenames. http://bit.ly/choob-origin"
+            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of Codenames. http://bit.ly/choob-origin"
         },
         "choobhelp": {
             "message": "For a list of commands head to my channel! https://www.twitch.tv/choob_bot"
