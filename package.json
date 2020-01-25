@@ -1,6 +1,6 @@
 {
-  "name": "zarnoth",
-  "version": "0.0.1",
+  "name": "choob_bot",
+  "version": "1.1.1",
   "description": "Twitch bot created by Lord Durok",
   "main": "index.js",
   "scripts": {
