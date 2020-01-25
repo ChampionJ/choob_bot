@@ -36,6 +36,9 @@
         "choobcount": { 
             "message": "There are {count} choobs in the database!"
         },
+        "choobversion": { 
+            "message": "Choob_Bot version is 1.1.0"
+        },
         "choobchannels": {
             "message": "There are {count} members of the Choob Continuum"
         },

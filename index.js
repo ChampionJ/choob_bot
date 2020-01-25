@@ -153,6 +153,10 @@ function onMessageHandler (target, context, msg, self) {
             client.say(target, info);
             console.log(`* Executed ${commandTriggered} command`);
             break;
+        case "choobversion":
+            client.say(target, command.message);
+            console.log(`* Executed ${commandTriggered} command`);
+            break;
         case "togglechoob":
             let exists = localdata.choob.ignoredTwitchChannels.indexOf(target);
             if(exists >= 0){
