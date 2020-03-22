@@ -13,6 +13,17 @@
         "chooborigin": "choobinfo"
     },
     "commands": {
+        "removechoobfromchannel": {
+            "requiresSuperAdmin": true,
+            "leaveMessage":"Choob Bot has left {channel}!",
+            "errorExist":"Choob Bot was not in {channel}!"
+        },
+        "addchoobtochannel": {
+            "requiresSuperAdmin": true,
+            "joinMessage":"Choob Bot has joined {channel}!",
+            "doesntExist":"Choob Bot could not find {channel}!",
+            "existsMessage":"Choob Bot is already in {channel}!"
+        },
         "joinchoob": {
             "choobbotChannelOnly": true,
             "joinMessage":"Choob Bot has joined your channel!",

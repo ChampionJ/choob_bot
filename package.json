@@ -1,7 +1,7 @@
 {
   "name": "choob_bot",
-  "version": "1.1.1",
-  "description": "Twitch bot created by Lord Durok",
+  "version": "1.1.2",
+  "description": "Twitch bot created by John Champion",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

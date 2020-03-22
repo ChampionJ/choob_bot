@@ -109,6 +109,40 @@ function onMessageHandler (target, context, msg, self) {
             client.say(target, choobQuote);
             console.log(`* Executed ${commandTriggered} command`);
             break;
+        case "addchoobtochannel": {
+            let channelToJoin = messageString.split(" ")[1].toLowerCase();
+            let channelstring = "#" + channelToJoin;
+            if(localdata.connectionSettings.channels.includes(channelstring)){
+                client.say(target, command.existsMessage.replace('{channel}',channelToJoin));
+            } else {
+                client.join(channelstring)
+                .then(()=>{
+                    localdata.connectionSettings.channels.push(channelstring);
+                    fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
+                    client.say(target, command.joinMessage.replace('{channel}',channelToJoin));
+                })
+                .catch(()=>{
+                    client.say(target, command.doesntExist.replace('{channel}',channelToJoin));
+                });
+            }
+            console.log(`* Executed ${commandTriggered} command`);
+            break;
+        }
+        case "removechoobfromchannel": {
+            let channelToLeave = messageString.split(" ")[1].toLowerCase();
+            const removalChannel = "#" + channelToLeave;
+            let removalChannelIndex = localdata.connectionSettings.channels.indexOf(removalChannel);
+            if(removalChannelIndex != -1){
+                localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
+                fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
+                client.say(target, command.leaveMessage.replace('{channel}',channelToLeave));
+                client.part(removalChannel);
+            } else {
+                client.say(target, command.errorMessage.replace('{channel}',channelToLeave));
+            }
+            console.log(`* Executed ${commandTriggered} command`);
+            break;
+        }
         case "joinchoob": {
             let channelstring = "#" + context.username;
             if(localdata.connectionSettings.channels.includes(channelstring)){
@@ -128,10 +162,13 @@ function onMessageHandler (target, context, msg, self) {
             if(removalChannelIndex != -1){
                 localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-                client.say(target, command.errorMessage);
+                client.say(target, command.leaveMessage);
                 client.part(removalChannel);
-                console.log(`* Executed ${commandTriggered} command`);
             }
+            else {
+                client.say(target, command.errorMessage);
+            }
+            console.log(`* Executed ${commandTriggered} command`);
             break;
         }
         case "choobchannels":
