@@ -52,7 +52,7 @@ client.on("submysterygift", onGiftedSubsHandler);
 client.connect();
 function onGiftedSubsHandler (channel, username, numbOfSubs, methods, userstate){
     if(settings.adminChannels.includes(channel)){
-        client.say(channel, messages.giftedsubs.replace('{gifter}','@'+username));
+        client.say(channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
         
     }
     console.log(`There were ${numbOfSubs} gifted in ${channel} by ${username}`);
