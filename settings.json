@@ -12,6 +12,9 @@
     "aliases": {
         "chooborigin": "choobinfo"
     },
+    "messages": {
+        "giftedsubs": "{gifter} the Great Choob is pleased with your actions"
+    },
     "commands": {
         "removechoobfromchannel": {
             "requiresSuperAdmin": true,

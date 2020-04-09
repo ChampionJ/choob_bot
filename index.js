@@ -47,9 +47,17 @@ const client = new tmi.client(localdata.connectionSettings);
 // Register our event handlers
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
+client.on("submysterygift", onGiftedSubsHandler);
 // Connect to Twitch:
 client.connect();
-
+function onGiftedSubsHandler (channel, username, numbOfSubs, methods, userstate){
+    if(settings.adminChannels.includes(channel)){
+        client.say(target, messages.giftedsubs.replace('{gifter}','@'+username));
+        
+    }
+    console.log(`There were ${numbOfSubs} gifted in ${channel} by ${username}`);
+    //let senderCount = ~~userstate["msg-param-sender-count"];
+}
 // Called every time a message comes in
 function onMessageHandler (target, context, msg, self) {
     if (self) { return; } // Ignore messages from the bot
