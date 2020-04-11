@@ -219,10 +219,18 @@ function onMessageHandler (target, context, msg, self) {
                 break;
             }
             const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
+            for(let msgnum = 0; msgnum < localdata.choob.messages.length; msgnum++){
+                if(stringSimilarity(localdata.choob.messages[msgnum], choobString) > 0.8){
+                    client.say(target, command.duplicateMsg.replace('{username}',context["display-name"]));
+                    console.log(`* Attempted to add duplicate choob quote.\n\"${choobString}\"\nmatched\n"${localdata.choob.messages[msgnum]}\"`);
+                    return;
+                }
+            }
+            
             localdata.choob.messages.push(choobString);
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, command.message.replace('{msg}',choobString));
-            console.log(`* Executed ${commandTriggered} command in ${target}`);
+            console.log(`* ${context["display-name"]} added:\n\"${choobString}\"\nto the choob list`);
             break;
         case "removechoob":
             if(messageString.length < commandTriggeredRAW.length + 2){
@@ -234,7 +242,10 @@ function onMessageHandler (target, context, msg, self) {
                 localdata.choob.messages.splice(removalIndex, 1);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, command.message.replace('{msg}',removalString));
-                console.log(`* Executed ${commandTriggered} command in ${target}`);
+                console.log(`* ${context["display-name"]} removed:\n\"${removalString}\"\nfrom the choob list`);
+            } else {
+                client.say(target, command.messageNoMatch.replace('{username}',context["display-name"]));
+                console.log(`* ${context["display-name"]} attempted to remove non-matching choob:\n\"${removalString}\"\nfrom the choob list`);
             }
             break;
         case "updatechoob":
@@ -273,4 +284,44 @@ function checkIfSuperAdmin(context){
 }
 function checkIfChoobbotChannel(target){
     return target === "#choob_bot";
+}
+
+function stringSimilarity(s1, s2) {
+    var longer = s1;
+    var shorter = s2;
+    if (s1.length < s2.length) {
+        longer = s2;
+        shorter = s1;
+    }
+    var longerLength = longer.length;
+    if (longerLength == 0) {
+        return 1.0;
+    }
+    return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+}
+function editDistance(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+
+    var costs = new Array();
+    for (var i = 0; i <= s1.length; i++) {
+        var lastValue = i;
+        for (var j = 0; j <= s2.length; j++) {
+            if (i == 0)
+                costs[j] = j;
+            else {
+                if (j > 0) {
+                var newValue = costs[j - 1];
+                    if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                        newValue = Math.min(Math.min(newValue, lastValue),
+                    costs[j]) + 1;
+                    costs[j - 1] = lastValue;
+                    lastValue = newValue;
+                }
+            }
+        }
+        if (i > 0)
+        costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
 }
