@@ -52,8 +52,8 @@ client.on("submysterygift", onGiftedSubsHandler);
 client.connect();
 function onGiftedSubsHandler (channel, username, numbOfSubs, methods, userstate){
     if(settings.adminChannels.includes(channel)){
-        client.say(channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
-        
+        setTimeout(client.say, numbOfSubs*0.2+1, channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
+        //client.say(channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
     }
     console.log(`There were ${numbOfSubs} gifted in ${channel} by ${username}`);
     //let senderCount = ~~userstate["msg-param-sender-count"];
@@ -115,7 +115,7 @@ function onMessageHandler (target, context, msg, self) {
             let choobIndex = localdata.choob.messages.length;
             let choobQuote = localdata.choob.messages[Math.floor(Math.random() * choobIndex)];
             client.say(target, choobQuote);
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         case "addchoobtochannel": {
             let channelToJoin = messageString.split(" ")[1].toLowerCase();
@@ -133,7 +133,7 @@ function onMessageHandler (target, context, msg, self) {
                     client.say(target, command.doesntExist.replace('{channel}',channelToJoin));
                 });
             }
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         }
         case "removechoobfromchannel": {
@@ -148,7 +148,7 @@ function onMessageHandler (target, context, msg, self) {
             } else {
                 client.say(target, command.errorMessage.replace('{channel}',channelToLeave));
             }
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         }
         case "joinchoob": {
@@ -161,7 +161,7 @@ function onMessageHandler (target, context, msg, self) {
                 client.say(target, command.joinMessage);
                 client.join(channelstring);
             }
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         }
         case "leavechoob": {
@@ -176,31 +176,31 @@ function onMessageHandler (target, context, msg, self) {
             else {
                 client.say(target, command.errorMessage);
             }
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         }
         case "choobchannels":
             let channelCount = localdata.connectionSettings.channels.length;
             client.say(target, command.message.replace('{count}',channelCount));
-            console.log(`* Executed ${commandTriggered} command`); 
+            console.log(`* Executed ${commandTriggered} command in ${target}`); 
             break;
         case "choobcount":
             let choobCount = localdata.choob.messages.length;
             client.say(target, command.message.replace('{count}',choobCount));
-            console.log(`* Executed ${commandTriggered} command`); 
+            console.log(`* Executed ${commandTriggered} command in ${target}`); 
             break;
         case "choobhelp":
             client.say(target, command.message);
-            console.log(`* Executed ${commandTriggered} command`); 
+            console.log(`* Executed ${commandTriggered} command in ${target}`); 
             break;
         case "choobinfo":
             let info = command.message;
             client.say(target, info);
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         case "choobversion":
             client.say(target, command.message);
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         case "togglechoob":
             let exists = localdata.choob.ignoredTwitchChannels.indexOf(target);
@@ -212,7 +212,7 @@ function onMessageHandler (target, context, msg, self) {
                 client.say(target, command.offMessage);
             }
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         case "addchoob":
             if(messageString.length < commandTriggeredRAW.length + 2){
@@ -222,7 +222,7 @@ function onMessageHandler (target, context, msg, self) {
             localdata.choob.messages.push(choobString);
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
             client.say(target, command.message.replace('{msg}',choobString));
-            console.log(`* Executed ${commandTriggered} command`);
+            console.log(`* Executed ${commandTriggered} command in ${target}`);
             break;
         case "removechoob":
             if(messageString.length < commandTriggeredRAW.length + 2){
@@ -234,7 +234,7 @@ function onMessageHandler (target, context, msg, self) {
                 localdata.choob.messages.splice(removalIndex, 1);
                 fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e) => {if(e != null)console.log(e);});
                 client.say(target, command.message.replace('{msg}',removalString));
-                console.log(`* Executed ${commandTriggered} command`);
+                console.log(`* Executed ${commandTriggered} command in ${target}`);
             }
             break;
         case "updatechoob":
@@ -242,7 +242,7 @@ function onMessageHandler (target, context, msg, self) {
                 localdata = fs.readFileSync(localdataPath);
                 localdata = JSON.parse(localdata);
                 client.say(target, command.successMessage);
-                console.log(`* Executed ${commandTriggered} command`);
+                console.log(`* Executed ${commandTriggered} command in ${target}`);
             }
             catch(err){
                 console.log(err);
@@ -250,7 +250,8 @@ function onMessageHandler (target, context, msg, self) {
             }
             break;
         default:
-            console.log(`* Unknown command ${commandTriggered}`);
+            //console.log(`* Unknown command ${commandTriggered}`);
+            break;
     }
     return;
 }
