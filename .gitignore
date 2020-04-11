@@ -61,3 +61,4 @@ typings/
 .next
 secrets.json
 localdata.json
+ecosystem.config.js
