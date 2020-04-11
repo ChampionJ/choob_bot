@@ -52,7 +52,9 @@ client.on("submysterygift", onGiftedSubsHandler);
 client.connect();
 function onGiftedSubsHandler (channel, username, numbOfSubs, methods, userstate){
     if(settings.adminChannels.includes(channel)){
-        setTimeout(client.say, numbOfSubs*200+1000, channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
+        setTimeout(() => {
+            client.say(channel, settings.messages.giftedsubs.replace('{gifter}',username));
+            }, numbOfSubs*200+1000);
         //client.say(channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
     }
     console.log(`There were ${numbOfSubs} gifted in ${channel} by ${username}`);
@@ -74,10 +76,10 @@ function onMessageHandler (target, context, msg, self) {
     if(command === undefined){
         let alias = settings.aliases[commandTriggered];
         if(alias === undefined){
-            console.log("command not found");
+            //console.log("command not found");
             return;
         } else {
-            console.log("alias found");
+            //console.log("alias found");
             command = settings.commands[alias];
             commandTriggered = alias;
         }

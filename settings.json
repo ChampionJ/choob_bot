@@ -13,7 +13,7 @@
         "chooborigin": "choobinfo"
     },
     "messages": {
-        "giftedsubs": "{gifter} the Great Choob is pleased with your actions"
+        "giftedsubs": "@{gifter} the Great Choob thanks you for your generosity"
     },
     "commands": {
         "removechoobfromchannel": {
