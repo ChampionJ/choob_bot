@@ -14,6 +14,9 @@
             "#choob_bot"
         ]
     },
+    "giftedsubs": [
+
+    ],
     "choob":{
         "ignoredTwitchChannels": [],
         "messages": []

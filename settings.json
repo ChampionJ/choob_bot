@@ -12,9 +12,6 @@
     "aliases": {
         "chooborigin": "choobinfo"
     },
-    "messages": {
-        "giftedsubs": "@{gifter} the Great Choob thanks you for your generosity"
-    },
     "commands": {
         "removechoobfromchannel": {
             "requiresSuperAdmin": true,
@@ -66,8 +63,18 @@
             "message":"Removed: \"{msg}\" from the master Choob list!",
             "messageNoMatch": "@{username} that choob was not on the list."
         },
+        "addgiftquote": {
+            "requiresAdmin": true,
+            "message":"Added: \"{msg}\" to the master gift quote list!",
+            "duplicateMsg":"@{username} that quote was too similar to an existing gift quote."
+        },
+        "removegiftquote": {
+            "requiresAdmin": true,
+            "message":"Removed: \"{msg}\" from the master gift quote list!",
+            "messageNoMatch": "@{username} that quote was not on the gift quote list."
+        },
         "choobinfo": {
-            "message": "'Choob' originated when O'D said the word 'tube' with his native accent during a game of Codenames. http://bit.ly/choob-origin"
+            "message": "'Choob' originated when MCDM's cast member O'D said the word 'tube' with his native accent during a game of Codenames. http://bit.ly/choob-origin"
         },
         "choobhelp": {
             "message": "For a list of commands head to my channel! https://www.twitch.tv/choob_bot"

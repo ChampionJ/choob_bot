@@ -28,6 +28,11 @@
     "aliases": {
         "chooborigin": "choobinfo"
     },
+    "messages": {
+        "giftedsubs": [
+            "@{gifter} the Great Choob thanks you for your generosity"
+        ]
+    },
     "commands": {
         "joinchoob": {
             "choobbotChannelOnly": true
@@ -47,6 +52,12 @@
             "requiresAdmin": true
         },
         "removechoob": {
+            "requiresAdmin": true
+        },
+        "addgiftquote": {
+            "requiresAdmin": true
+        },
+        "removegiftquote": {
             "requiresAdmin": true
         },
         "choobinfo": {
