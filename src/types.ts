@@ -1,8 +1,36 @@
-import { Client } from "tmi.js"
+import { Collection } from "discord.js";
+import { Options, Userstate, client, Events, Actions, Client, ClientBase } from "tmi.js";
+import BaseCommand from "./utils/structures/BaseCommand";
+import BaseEvent from "./utils/structures/BaseEvent";
+import { StrictEventEmitter } from "tmi.js/strict-event-emitter-types";
 
-export type TwitchClient = Client;
+
+
+
+export class TwitchManager {
+  client: Client;
+  private _commands = new Collection<string, BaseCommand>();
+  private _events = new Collection<string, BaseEvent>();
+  private _prefix: string = '!';
+
+  get commands(): Collection<string, BaseCommand> { return this._commands; }
+  get events(): Collection<string, BaseEvent> { return this._events; }
+  get prefix(): string { return this._prefix; }
+
+  set prefix(prefix: string) { this._prefix = prefix; }
+
+  constructor(opts: Options) {
+    this.client = client(opts);
+  }
+}
+export interface TwitchMessage {
+  target: string,
+  user: Userstate,
+  msg: string,
+  self: boolean
+}
 export interface ChoobBotLocalSettings {
-  connectionSettings: ConnectionSettings;
+  connectionSettings: Options;
   discordToken: string;
   consoleLog: boolean;
   extraInfoChannels: string[];
@@ -15,25 +43,6 @@ export interface Choob {
   messages: string[];
 }
 
-export interface ConnectionSettings {
-  options: Options;
-  connection: Connection;
-  identity: Identity;
-  channels: string[];
-}
-
-export interface Connection {
-  reconnect: boolean;
-}
-
-export interface Identity {
-  username: string;
-  password: string;
-}
-
-export interface Options {
-  debug: boolean;
-}
 
 //////////
 

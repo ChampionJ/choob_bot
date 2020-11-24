@@ -1,6 +1,7 @@
 import { Client, Message, User } from "discord.js";
-import { ClientBase, Userstate } from "tmi.js";
-import { TwitchClient, ChoobBotLocalSettings, ChoobBotSettings, ConnectionSettings } from "./types";
+import { ClientBase, Userstate, client } from "tmi.js";
+import { ChoobBotLocalSettings, ChoobBotSettings, TwitchManager } from "./types";
+import { registerCommands, registerEvents } from "./utils/registry";
 
 
 require('dotenv').config()
@@ -61,7 +62,10 @@ let localdata: ChoobBotLocalSettings;
 let discordClient: Client = new Discord.Client({
   partials: ['MESSAGE', 'REACTION']
 });
-let client: TwitchClient;
+
+let twitchManager: TwitchManager;
+
+
 
 
 readFile(localdataPath).then((result: any) => {
@@ -101,16 +105,30 @@ function loginToStuff() {
       password: process.env.TWITCH_PASS!
     },
     channels: localdata.connectionSettings.channels
-  }
+  };
 
-  client = new tmi.client(connection);
+
+  //tclient = new tmi.client(connection);
   // Register our event handlers
-  client.on('message', onMessageHandler);
-  client.on('connected', onConnectedHandler);
-  client.on("submysterygift", onGiftedSubsHandler);
+  // tclient.on('message', onMessageHandler);
+  // tclient.on('connected', onConnectedHandler);
+  // tclient.on("submysterygift", onGiftedSubsHandler);
   // Connect to Twitch:
-  client.connect();
+  // tclient.connect();
+
+  (async () => {
+    twitchManager = new TwitchManager(connection);
+    twitchManager.prefix = process.env.DISCORD_BOT_PREFIX || twitchManager.prefix;
+    await registerCommands(twitchManager, '../commands');
+    await registerEvents(twitchManager, '../events');
+    await twitchManager.client.connect();
+  })();
+
+
 }
+
+
+/*
 
 function onGiftedSubsHandler(channel: string, username: string, numbOfSubs: number, methods: Object, userstate: Userstate) {
   if (checkIfExtraInfoChannel(channel)) {
@@ -120,7 +138,7 @@ function onGiftedSubsHandler(channel: string, username: string, numbOfSubs: numb
       if (numbOfSubs > 1) {
         giftQuote = localdata.giftedsubs[Math.floor(Math.random() * giftIndex)];
       }
-      client.say(channel, giftQuote.replace('{gifter}', username).replace('{number}', numbOfSubs.toString()));
+      tclient.say(channel, giftQuote.replace('{gifter}', username).replace('{number}', numbOfSubs.toString()));
     }, numbOfSubs * 200 + 1000);
     //client.say(channel, settings.messages.giftedsubs.replace('{gifter}','@'+username));
   }
@@ -162,20 +180,20 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
 
   if (!isUserSuperAdmin) {
     if (command.requiresSuperAdmin === true) {
-      client.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
+      tclient.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
       logger.log('info', `${context["display-name"]} attempted to execute ${commandTriggered} command in ${target} but lacked Super Admin permission`);
       return;
     }
     if (command.requiresAdmin === true) {
       if (checkIfAdmin(context, target) === false) {
-        client.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
+        tclient.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
         logger.log('info', `${context["display-name"]} attempted to execute ${commandTriggered} command in ${target} but lacked Admin permission`);
         return;
       }
     }
     if (command.requiresMod === true) {
       if (checkIfMod(context, target) === false) {
-        client.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
+        tclient.say(target, settings.permissionLackingMessage.replace('{name}', context["display-name"]!));
         logger.log('info', `${context["display-name"]} attempted to execute ${commandTriggered} command in ${target} but lacked Mod permission`);
         return;
       }
@@ -187,27 +205,27 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
         break;
       let choobIndex = localdata.choob.messages.length;
       let choobQuote = localdata.choob.messages[Math.floor(Math.random() * choobIndex)];
-      client.say(target, choobQuote);
+      tclient.say(target, choobQuote);
 
       logger.log('verbose', `${context["display-name"]} executed ${commandTriggered} command in ${target}`);
       break;
     case "addchoobtochannel": {
       let channelToJoin = messageString.split(" ")[1].toLowerCase();
       let channelstring = "#" + channelToJoin;
-      if (localdata.connectionSettings.channels.includes(channelstring)) {
-        client.say(target, command.existsMessage.replace('{channel}', channelToJoin));
+      if (localdata.connectionSettings.channels!.includes(channelstring)) {
+        tclient.say(target, command.existsMessage.replace('{channel}', channelToJoin));
         logger.log('info', `${context["display-name"]} attempted to add Choob_Bot to ${channelToJoin}, but Choob_Bot is already in that channel`);
       } else {
-        client.join(channelstring)
+        tclient.join(channelstring)
           .then(() => {
-            localdata.connectionSettings.channels.push(channelstring);
+            localdata.connectionSettings.channels!.push(channelstring);
             fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: Error) => { if (e != null) logger.log('error', e); });
-            client.say(target, command.joinMessage.replace('{channel}', channelToJoin));
+            tclient.say(target, command.joinMessage.replace('{channel}', channelToJoin));
             logger.log('info', `${context["display-name"]} added Choob_Bot to ${channelToJoin}`);
 
           })
           .catch(() => {
-            client.say(target, command.doesntExist.replace('{channel}', channelToJoin));
+            tclient.say(target, command.doesntExist.replace('{channel}', channelToJoin));
             logger.log('info', `${context["display-name"]} attempted to add Choob_Bot to ${channelToJoin}, but that channel doesn\'t exist`);
           });
       }
@@ -217,15 +235,15 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
     case "removechoobfromchannel": {
       let channelToLeave = messageString.split(" ")[1].toLowerCase();
       const removalChannel = "#" + channelToLeave;
-      let removalChannelIndex = localdata.connectionSettings.channels.indexOf(removalChannel);
+      let removalChannelIndex = localdata.connectionSettings.channels!.indexOf(removalChannel);
       if (removalChannelIndex != -1) {
-        localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
+        localdata.connectionSettings.channels!.splice(removalChannelIndex, 1);
         fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-        client.say(target, command.leaveMessage.replace('{channel}', channelToLeave));
-        client.part(removalChannel);
+        tclient.say(target, command.leaveMessage.replace('{channel}', channelToLeave));
+        tclient.part(removalChannel);
         logger.log('info', `${context["display-name"]} removed Choob_Bot from ${channelToLeave}`);
       } else {
-        client.say(target, command.errorMessage.replace('{channel}', channelToLeave));
+        tclient.say(target, command.errorMessage.replace('{channel}', channelToLeave));
         logger.log('info', `${context["display-name"]} attempted to remove Choob_Bot from ${channelToLeave}`);
       }
       logger.log('debug', `* Executed ${commandTriggered} command in ${target}`);
@@ -233,14 +251,14 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
     }
     case "joinchoob": {
       let channelstring = "#" + context.username;
-      if (localdata.connectionSettings.channels.includes(channelstring)) {
-        client.say(target, command.existsMessage);
+      if (localdata.connectionSettings.channels!.includes(channelstring)) {
+        tclient.say(target, command.existsMessage);
         logger.log('info', `${context["display-name"]} attempted to add Choob_Bot to ${channelstring}, but Choob_Bot is already in that channel`);
       } else {
-        localdata.connectionSettings.channels.push(channelstring);
+        localdata.connectionSettings.channels!.push(channelstring);
         fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-        client.say(target, command.joinMessage);
-        client.join(channelstring);
+        tclient.say(target, command.joinMessage);
+        tclient.join(channelstring);
         logger.log('info', `${context["display-name"]} added Choob_Bot to ${channelstring}`);
       }
       logger.log('debug', `* Executed ${commandTriggered} command in ${target}`);
@@ -248,46 +266,46 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
     }
     case "leavechoob": {
       const removalChannel = "#" + context.username;
-      let removalChannelIndex = localdata.connectionSettings.channels.indexOf(removalChannel);
+      let removalChannelIndex = localdata.connectionSettings.channels!.indexOf(removalChannel);
       if (removalChannelIndex != -1) {
-        localdata.connectionSettings.channels.splice(removalChannelIndex, 1);
+        localdata.connectionSettings.channels!.splice(removalChannelIndex, 1);
         fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-        client.say(target, command.leaveMessage);
-        client.part(removalChannel);
+        tclient.say(target, command.leaveMessage);
+        tclient.part(removalChannel);
         logger.log('info', `${context["display-name"]} removed Choob_Bot from ${removalChannel}`);
       }
       else {
-        client.say(target, command.errorMessage);
+        tclient.say(target, command.errorMessage);
         logger.log('info', `${context["display-name"]} attempted to remove Choob_Bot from ${removalChannel}`);
       }
       logger.log('debug', `* Executed ${commandTriggered} command in ${target}`);
       break;
     }
     case "choobchannels":
-      let channelCount = localdata.connectionSettings.channels.length;
-      client.say(target, command.message.replace('{count}', channelCount));
+      let channelCount = localdata.connectionSettings.channels!.length;
+      tclient.say(target, command.message.replace('{count}', channelCount));
 
       logger.log('info', `${context["display-name"]} Executed ${commandTriggered} command in ${target}`);
       break;
     case "choobcount":
       let choobCount = localdata.choob.messages.length;
-      client.say(target, command.message.replace('{count}', choobCount));
+      tclient.say(target, command.message.replace('{count}', choobCount));
 
       logger.log('info', `${context["display-name"]} Executed ${commandTriggered} command in ${target}`);
       break;
     case "choobhelp":
-      client.say(target, command.message);
+      tclient.say(target, command.message);
 
       logger.log('info', `${context["display-name"]} Executed ${commandTriggered} command in ${target}`);
       break;
     case "choobinfo":
       let info = command.message;
-      client.say(target, info);
+      tclient.say(target, info);
 
       logger.log('info', `${context["display-name"]} Executed ${commandTriggered} command in ${target}`);
       break;
     case "choobversion":
-      client.say(target, command.message);
+      tclient.say(target, command.message);
 
       logger.log('info', `${context["display-name"]} Executed ${commandTriggered} command in ${target}`);
       break;
@@ -295,10 +313,10 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       let exists = localdata.choob.ignoredTwitchChannels.indexOf(target);
       if (exists >= 0) {
         localdata.choob.ignoredTwitchChannels.splice(exists, 1);
-        client.say(target, command.onMessage);
+        tclient.say(target, command.onMessage);
       } else {
         localdata.choob.ignoredTwitchChannels.push(target);
-        client.say(target, command.offMessage);
+        tclient.say(target, command.offMessage);
       }
       fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
 
@@ -311,7 +329,7 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       const choobString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
       for (let msgnum = 0; msgnum < localdata.choob.messages.length; msgnum++) {
         if (stringSimilarity(localdata.choob.messages[msgnum], choobString) > 0.8) {
-          client.say(target, command.duplicateMsg.replace('{username}', context["display-name"]));
+          tclient.say(target, command.duplicateMsg.replace('{username}', context["display-name"]));
 
           logger.log('info', `* Attempted to add duplicate choob quote.\n\"${choobString}\"\nmatched\n"${localdata.choob.messages[msgnum]}\"`);
           return;
@@ -319,7 +337,7 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       }
       localdata.choob.messages.push(choobString);
       fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) { logger.log('error', e); } });
-      client.say(target, command.message.replace('{msg}', choobString));
+      tclient.say(target, command.message.replace('{msg}', choobString));
 
       logger.log('info', `* ${context["display-name"]} added:\n\"${choobString}\"\nto the choob list`);
       break;
@@ -332,11 +350,11 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       if (removalIndex != -1) {
         localdata.choob.messages.splice(removalIndex, 1);
         fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-        client.say(target, command.message.replace('{msg}', removalString));
+        tclient.say(target, command.message.replace('{msg}', removalString));
 
         logger.log('info', `* ${context["display-name"]} removed:\n\"${removalString}\"\nfrom the choob list`);
       } else {
-        client.say(target, command.messageNoMatch.replace('{username}', context["display-name"]));
+        tclient.say(target, command.messageNoMatch.replace('{username}', context["display-name"]));
 
         logger.log('info', `* ${context["display-name"]} attempted to remove non-matching choob:\n\"${removalString}\"\nfrom the choob list`);
       }
@@ -348,7 +366,7 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       const giftString = messageString.substr(commandTriggeredRAW.length + 1); //remove commnad name and first space
       for (let msgnum = 0; msgnum < localdata.giftedsubs.length; msgnum++) {
         if (stringSimilarity(localdata.giftedsubs[msgnum], giftString) > 0.8) {
-          client.say(target, command.duplicateMsg.replace('{username}', context["display-name"]));
+          tclient.say(target, command.duplicateMsg.replace('{username}', context["display-name"]));
 
           logger.log('info', `* Attempted to add duplicate gift quote.\n\"${giftString}\"\nmatched\n"${localdata.giftedsubs[msgnum]}\"`);
           return;
@@ -356,7 +374,7 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       }
       localdata.giftedsubs.push(giftString);
       fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-      client.say(target, command.message.replace('{msg}', giftString));
+      tclient.say(target, command.message.replace('{msg}', giftString));
 
       logger.log('info', `* ${context["display-name"]} added:\n\"${giftString}\"\nto the gift quote list`);
       break;
@@ -369,11 +387,11 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
       if (giftRemovalIndex != -1) {
         localdata.giftedsubs.splice(giftRemovalIndex, 1);
         fs.writeFile(localdataPath, JSON.stringify(localdata, null, 4), (e: any) => { if (e != null) logger.log('error', e); });
-        client.say(target, command.message.replace('{msg}', giftRemovalString));
+        tclient.say(target, command.message.replace('{msg}', giftRemovalString));
 
         logger.log('info', `* ${context["display-name"]} removed:\n\"${giftRemovalString}\"\nfrom the gift quote list`);
       } else {
-        client.say(target, command.messageNoMatch.replace('{username}', context["display-name"]));
+        tclient.say(target, command.messageNoMatch.replace('{username}', context["display-name"]));
 
         logger.log('info', `* ${context["display-name"]} attempted to remove non-matching quote:\n\"${giftRemovalString}\"\nfrom the gift quote list`);
       }
@@ -381,13 +399,13 @@ function onMessageHandler(target: string, context: Userstate, msg: string, self:
     case "updatechoob":
       try {
         localdata = JSON.parse(fs.readFileSync(localdataPath));
-        client.say(target, command.successMessage);
+        tclient.say(target, command.successMessage);
 
         logger.log('info', `${context["display-name"]} executed ${commandTriggered} command in ${target}`);
       }
       catch (err) {
         logger.log('error', err);
-        client.say(target, command.failMessage);
+        tclient.say(target, command.failMessage);
       }
       break;
     default:
@@ -458,3 +476,5 @@ function editDistance(s1: string, s2: string) {
   }
   return costs[s2.length];
 }
+
+*/
