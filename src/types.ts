@@ -23,11 +23,26 @@ export class TwitchManager {
     this.client = client(opts);
   }
 }
-export interface TwitchMessage {
-  target: string,
-  user: Userstate,
-  msg: string,
-  self: boolean
+export class TwitchMessage {
+  manager: TwitchManager;
+  target: string;
+  user: Userstate;
+  msg: string;
+  self: boolean;
+  constructor(manager: TwitchManager, target: string, user: Userstate, msg: string, self: boolean) {
+    this.manager = manager;
+    this.target = target;
+    this.user = user;
+    this.msg = msg;
+    this.self = self;
+  }
+  replyInChat(msg: string) {
+    this.manager.client.say(this.target, msg);
+
+  }
+  replyInWhisper(msg: string) {
+    this.manager.client.whisper(this.user.username, msg)
+  }
 }
 export interface ChoobBotLocalSettings {
   connectionSettings: Options;

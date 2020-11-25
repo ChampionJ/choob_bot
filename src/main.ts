@@ -20,38 +20,71 @@ const localdataPath = "localdata.json";
 
 const Discord = require('discord.js');
 
-//setup logger
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    winston.format.errors({ stack: true }),
-    winston.format.splat(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'choob_bot' },
-  transports: [
-    //
-    // - Write to all logs with level `info` and below to `quick-start-combined.log`.
-    // - Write all logs error (and below) to `quick-start-error.log`.
-    //
-    new winston.transports.File({ filename: 'logs/choob_bot-error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
-    new winston.transports.File({ filename: 'logs/choob_bot-combined.log', level: 'verbose' })
-  ]
-});
 
-if (process.env.NODE_ENV != 'production') {
-  logger.remove(winston.transports.Console);
-  logger.add(new winston.transports.Console({
-    colorize: true
-  }));
-  logger.level = 'debug';
+winston.loggers.add('main',
+  {
+    level: 'info',
+    format: winston.format.combine(
+
+      winston.format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+      }),
+      winston.format.errors({ stack: true }),
+      winston.format.splat(),
+      //winston.format.json(),
+
+      //winston.format.prettyPrint()
+    ),
+    defaultMeta: { service: 'choob_bot' },
+    transports: [
+      //
+      // - Write to all logs with level `info` and below to `quick-start-combined.log`.
+      // - Write all logs error (and below) to `quick-start-error.log`.
+      //
+      new winston.transports.File({ filename: 'logs/choob_bot-error.log', level: 'error', handleExceptions: true }),
+      new winston.transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
+      new winston.transports.File({ filename: 'logs/choob_bot-combined.log', level: 'verbose' })
+
+    ]
+  });
+
+function checkEmpty(info: any): string {
+  if (Object.keys(info).length > 2) {
+    return '\n' + JSON.stringify(info, (key, value) => {
+      if (key === 'timestamp' || key === 'service') {
+        return undefined;
+      }
+      return value;
+    }, 2)
+  }
+  return ''
 }
 
-logger.log('info', 'Running in: ' + process.env.NODE_ENV)
+if (process.env.NODE_ENV != 'production') {
+  winston.loggers.get('main').add(new winston.transports.Console({
+    level: 'debug',
+    format: winston.format.combine(
+
+      // winston.format.colorize(),
+      // winston.format.padLevels(),
+      // winston.format.simple()
+
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.align(),
+      winston.format.metadata(),
+      winston.format.printf((info: any) => `${info.metadata.timestamp} ${info.level}: ${info.message} ${checkEmpty(info.metadata)}`),
+    )
+  }));
+  //winston.loggers.get('main').level = 'debug';
+}
+
+const logger = winston.loggers.get('main');
+
+
+logger.info('Running in: ' + process.env.NODE_ENV)
+logger.debug('This is a debug message!')
+
 
 let settings: ChoobBotSettings;
 let localdata: ChoobBotLocalSettings;
@@ -64,9 +97,6 @@ let discordClient: Client = new Discord.Client({
 });
 
 let twitchManager: TwitchManager;
-
-
-
 
 readFile(localdataPath).then((result: any) => {
   localdata = JSON.parse(result.toString())
