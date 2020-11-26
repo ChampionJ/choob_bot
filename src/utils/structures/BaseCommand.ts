@@ -1,8 +1,10 @@
 
+import winston from "winston";
 import { TwitchManager, TwitchMessage } from "../../types";
 
 
 export default abstract class BaseCommand {
+  logger = winston.loggers.get('main');
   constructor(private name: string, private category: string, private aliases: Array<string>) { }
 
   getName(): string { return this.name; }

@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from "@typegoose/typegoose";
 const mongoose = require('mongoose');
 
-class ChannelConfig {
+class TwitchChannelConfig {
   @prop({ required: true, unique: true })
   public channelName?: string;
   @prop({ required: true, default: '!' })
@@ -10,4 +10,4 @@ class ChannelConfig {
   public adminChannel?: boolean;
 }
 
-module.exports = getModelForClass(ChannelConfig)
+export = getModelForClass(TwitchChannelConfig)

@@ -1,7 +1,9 @@
 import { Client, Message, User } from "discord.js";
+import { Mongoose } from "mongoose";
 import { ClientBase, Userstate, client } from "tmi.js";
 import { ChoobBotLocalSettings, ChoobBotSettings, TwitchManager } from "./types";
 import { registerCommands, registerEvents } from "./utils/registry";
+
 
 
 require('dotenv').config()
@@ -19,6 +21,9 @@ const settingsPath = "settings.json";
 const localdataPath = "localdata.json";
 
 const Discord = require('discord.js');
+
+const mongoose = require('mongoose')
+
 
 
 winston.loggers.add('main',
@@ -86,6 +91,9 @@ logger.info('Running in: ' + process.env.NODE_ENV)
 logger.debug('This is a debug message!')
 
 
+mongoose.connect(process.env.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+
+
 let settings: ChoobBotSettings;
 let localdata: ChoobBotLocalSettings;
 
@@ -107,20 +115,23 @@ readFile(localdataPath).then((result: any) => {
 }).catch((err: any) => { console.log(err) })
 
 
-function loginToStuff() {
+async function loginToStuff() {
 
-  discordClient.login(process.env.DISCORD_TOKEN);
+  (async () => {
 
-  discordClient.on('ready', () => {
-    logger.info('Connected to Discord as ' + discordClient.user?.tag + ' - (' + discordClient.user?.id + ')');
-  });
-  discordClient.on('message', (msg: Message) => {
-    logger.info(`Message: \n${msg}`)
-    if (msg.content === '!zarnoth') {
-      const embed = new Discord.MessageEmbed().setTitle('A slick little embed').setColor(0xff0000).setDescription('This is a description');
-      msg.channel.send(embed)
-    }
-  });
+    discordClient.login(process.env.DISCORD_TOKEN);
+
+    discordClient.on('ready', () => {
+      logger.info('Connected to Discord as ' + discordClient.user?.tag + ' - (' + discordClient.user?.id + ')');
+    });
+    discordClient.on('message', (msg: Message) => {
+      logger.info(`Message: \n${msg}`)
+      if (msg.content === '!zarnoth') {
+        const embed = new Discord.MessageEmbed().setTitle('A slick little embed').setColor(0xff0000).setDescription('This is a description');
+        msg.channel.send(embed)
+      }
+    });
+  })
 
   //create twitch client
   let connection = {
