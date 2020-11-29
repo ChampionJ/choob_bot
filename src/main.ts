@@ -1,172 +1,157 @@
+require('dotenv').config()
 import { Client, Message, User } from "discord.js";
-import { Mongoose } from "mongoose";
-import { ClientBase, Userstate, client } from "tmi.js";
+import { connect } from "mongoose";
 import { ChoobBotLocalSettings, ChoobBotSettings, TwitchManager } from "./types";
 import { registerCommands, registerEvents } from "./utils/registry";
+import StateManager from './utils/StateManager';
+import { AccessToken, RefreshableAuthProvider, StaticAuthProvider, TokenInfo } from 'twitch-auth';
+import TwitchTokens from "./database/schemas/TwitchTokens";
 
-
-
-require('dotenv').config()
 
 const util = require("util");
-
-
-const tmi = require("tmi.js");
 const winston = require('winston');
-
 const fs = require('fs');
 const readFile = util.promisify(fs.readFile);
-
+const writeFile = util.promisify(fs.writeFile);
 const settingsPath = "settings.json";
 const localdataPath = "localdata.json";
-
 const Discord = require('discord.js');
-
-const mongoose = require('mongoose')
-
-
-
-winston.loggers.add('main',
-  {
-    level: 'info',
-    format: winston.format.combine(
-
-      winston.format.timestamp({
-        format: 'YYYY-MM-DD HH:mm:ss'
-      }),
-      winston.format.errors({ stack: true }),
-      winston.format.splat(),
-      //winston.format.json(),
-
-      //winston.format.prettyPrint()
-    ),
-    defaultMeta: { service: 'choob_bot' },
-    transports: [
-      //
-      // - Write to all logs with level `info` and below to `quick-start-combined.log`.
-      // - Write all logs error (and below) to `quick-start-error.log`.
-      //
-      new winston.transports.File({ filename: 'logs/choob_bot-error.log', level: 'error', handleExceptions: true }),
-      new winston.transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
-      new winston.transports.File({ filename: 'logs/choob_bot-combined.log', level: 'verbose' })
-
-    ]
-  });
-
-function checkEmpty(info: any): string {
-  if (Object.keys(info).length > 2) {
-    return '\n' + JSON.stringify(info, (key, value) => {
-      if (key === 'timestamp' || key === 'service') {
-        return undefined;
-      }
-      return value;
-    }, 2)
-  }
-  return ''
-}
-
-if (process.env.NODE_ENV != 'production') {
-  winston.loggers.get('main').add(new winston.transports.Console({
-    level: 'debug',
-    format: winston.format.combine(
-
-      // winston.format.colorize(),
-      // winston.format.padLevels(),
-      // winston.format.simple()
-
-      winston.format.colorize(),
-      winston.format.timestamp(),
-      winston.format.align(),
-      winston.format.metadata(),
-      winston.format.printf((info: any) => `${info.metadata.timestamp} ${info.level}: ${info.message} ${checkEmpty(info.metadata)}`),
-    )
-  }));
-  //winston.loggers.get('main').level = 'debug';
-}
-
 const logger = winston.loggers.get('main');
-
-
-logger.info('Running in: ' + process.env.NODE_ENV)
-logger.debug('This is a debug message!')
-
-
-mongoose.connect(process.env.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
-
 
 let settings: ChoobBotSettings;
 let localdata: ChoobBotLocalSettings;
-
-
-
-///Discord Bot
-let discordClient: Client = new Discord.Client({
-  partials: ['MESSAGE', 'REACTION']
-});
-
+let discordClient: Client;
 let twitchManager: TwitchManager;
 
-readFile(localdataPath).then((result: any) => {
-  localdata = JSON.parse(result.toString())
-  readFile(settingsPath, 'utf8').then((result: any) => {
-    settings = JSON.parse(result);
-    loginToStuff()
-  })
-}).catch((err: any) => { console.log(err) })
-
-
-async function loginToStuff() {
-
-  (async () => {
-
-    discordClient.login(process.env.DISCORD_TOKEN);
-
-    discordClient.on('ready', () => {
-      logger.info('Connected to Discord as ' + discordClient.user?.tag + ' - (' + discordClient.user?.id + ')');
-    });
-    discordClient.on('message', (msg: Message) => {
-      logger.info(`Message: \n${msg}`)
-      if (msg.content === '!zarnoth') {
-        const embed = new Discord.MessageEmbed().setTitle('A slick little embed').setColor(0xff0000).setDescription('This is a description');
-        msg.channel.send(embed)
-      }
-    });
-  })
-
-  //create twitch client
-  let connection = {
-    options: {
-      debug: false
-    },
-    connection: {
-      reconnect: true
-    },
-    identity: {
-      username: process.env.TWITCH_USERNAME!,
-      password: process.env.TWITCH_PASS!
-    },
-    channels: localdata.connectionSettings.channels
-  };
-
-
-  //tclient = new tmi.client(connection);
-  // Register our event handlers
-  // tclient.on('message', onMessageHandler);
-  // tclient.on('connected', onConnectedHandler);
-  // tclient.on("submysterygift", onGiftedSubsHandler);
-  // Connect to Twitch:
-  // tclient.connect();
-
-  (async () => {
-    twitchManager = new TwitchManager(connection);
-    twitchManager.prefix = process.env.DISCORD_BOT_PREFIX || twitchManager.prefix;
-    await registerCommands(twitchManager, '../commands');
-    await registerEvents(twitchManager, '../events');
-    await twitchManager.client.connect();
-  })();
-
-
+async function main() {
+  await setupLogger();
+  await getSettings();
+  setupDiscord()
+  setupTwitch()
 }
+main();
+
+async function setupLogger() {
+  winston.loggers.add('main',
+    {
+      level: 'info',
+      format: winston.format.combine(
+
+        winston.format.timestamp({
+          format: 'YYYY-MM-DD HH:mm:ss'
+        }),
+        winston.format.errors({ stack: true }),
+        winston.format.splat(),
+        //winston.format.json(),
+
+        //winston.format.prettyPrint()
+      ),
+      defaultMeta: { service: 'choob_bot' },
+      transports: [
+        //
+        // - Write to all logs with level `info` and below to `quick-start-combined.log`.
+        // - Write all logs error (and below) to `quick-start-error.log`.
+        //
+        new winston.transports.File({ filename: 'logs/choob_bot-error.log', level: 'error', handleExceptions: true }),
+        new winston.transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
+        new winston.transports.File({ filename: 'logs/choob_bot-combined.log', level: 'verbose' })
+
+      ]
+    });
+
+  const checkEmpty = (info: any): string => {
+    if (Object.keys(info).length > 2) {
+      return '\n' + JSON.stringify(info, (key, value) => {
+        if (key === 'timestamp' || key === 'service') {
+          return undefined;
+        }
+        return value;
+      }, 2)
+    }
+    return ''
+  }
+  if (process.env.NODE_ENV != 'production') {
+    winston.loggers.get('main').add(new winston.transports.Console({
+      level: 'debug',
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.timestamp(),
+        winston.format.align(),
+        winston.format.metadata(),
+        winston.format.printf((info: any) => `${info.metadata.timestamp} ${info.level}: ${info.message} ${checkEmpty(info.metadata)}`),
+      )
+    }));
+  }
+  logger.info('Running in mode: ' + process.env.NODE_ENV)
+}
+
+async function getSettings() {
+  await readFile(localdataPath).then((result: any) => {
+    localdata = JSON.parse(result.toString())
+
+  }).catch((err: any) => { console.log(err) })
+  await readFile(settingsPath, 'utf8').then((result: any) => {
+    settings = JSON.parse(result);
+  }).catch((err: any) => { console.log(err) })
+}
+
+async function setupDiscord() {
+
+  discordClient = new Discord.Client({
+    partials: ['MESSAGE', 'REACTION']
+  });
+
+  discordClient.login(process.env.DISCORD_TOKEN);
+
+  discordClient.on('ready', () => {
+    logger.info('Connected to Discord as ' + discordClient.user?.tag + ' - (' + discordClient.user?.id + ')');
+  });
+  discordClient.on('message', (msg: Message) => {
+    logger.info(`Message: \n${msg}`)
+    if (msg.content === '!zarnoth') {
+      const embed = new Discord.MessageEmbed().setTitle('A slick little embed').setColor(0xff0000).setDescription('This is a description');
+      msg.channel.send(embed)
+    }
+  });
+}
+
+async function setupTwitch() {
+  const clientId = process.env.TWITCH_CLIENTID!;
+  const clientSecret = process.env.TWITCH_CLIENT_SECRET!;
+  let tokenData: any;
+  // await readFile('tokens.json').then((result: any) => {
+  //   tokenData = JSON.parse(result.toString())
+  // }).catch((err: any) => { console.log(err) })
+
+  tokenData = await TwitchTokens.findOne({});
+
+  const auth = new RefreshableAuthProvider(
+    new StaticAuthProvider(clientId, tokenData.accessToken),
+    {
+      clientSecret,
+      refreshToken: tokenData.refreshToken,
+      expiry: tokenData.expiryTimestamp === null ? null : new Date(tokenData.expiryTimestamp),
+      onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
+        const newTokenData = {
+          accessToken,
+          refreshToken,
+          expiryTimestamp: expiryDate === null ? undefined : expiryDate.getTime()
+        };
+        await TwitchTokens.replaceOne({}, { accessToken: newTokenData.accessToken, refreshToken: newTokenData.refreshToken, expiryTimestamp: newTokenData.expiryTimestamp })
+      }
+    }
+  );
+
+  twitchManager = new TwitchManager(auth, { channels: localdata.connectionSettings.channels });
+
+  StateManager.on('ready', () => {
+    logger.debug('onReady')
+  })
+  await registerCommands(twitchManager, '../commands');
+  await registerEvents(twitchManager, '../events');
+  await twitchManager.connect();
+}
+
 
 
 /*

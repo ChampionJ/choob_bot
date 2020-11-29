@@ -1,7 +1,7 @@
 import path from "path";
 import { promises as fs } from 'fs';
 import { TwitchManager } from "../types";
-
+import BaseEvent from "./structures/BaseEvent";
 
 export async function registerCommands(client: TwitchManager, dir: string = '') {
   const filePath = path.join(__dirname, dir);
@@ -28,9 +28,9 @@ export async function registerEvents(client: TwitchManager, dir: string = '') {
     if (stat.isDirectory()) registerEvents(client, path.join(dir, file));
     if (file.endsWith('.js') || file.endsWith('.ts')) {
       const { default: Event } = await import(path.join(dir, file));
-      const event = new Event();
-      client.events.set(event.getName(), event);
-      client.client.on(event.getName(), event.run.bind(event, client));
+      const event: BaseEvent = new Event();
+      event.logger.info(`Initialized the ${event.getName()} event!`)
+      client[event.getName()](event.run.bind(event, client))
     }
   }
 }

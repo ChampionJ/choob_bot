@@ -1,35 +1,35 @@
 import { Collection } from "discord.js";
-import { Options, Userstate, client, Events, Actions, Client, ClientBase } from "tmi.js";
 import BaseCommand from "./utils/structures/BaseCommand";
-import BaseEvent from "./utils/structures/BaseEvent";
-import { StrictEventEmitter } from "tmi.js/strict-event-emitter-types";
+import { ChatClient } from "twitch-chat-client";
+import { AuthProvider } from "twitch-auth";
+import { ChatClientOptions } from "twitch-chat-client/lib/ChatClient";
+import { EventHandlerList } from "ircv3/lib/IrcClient"
 
+export class TwitchManager extends ChatClient {
+  [index: string]: any;
 
-
-
-export class TwitchManager {
-  client: Client;
   private _commands = new Collection<string, BaseCommand>();
-  private _events = new Collection<string, BaseEvent>();
+  //private _events = new Collection<string, BaseEvent>();
   private _prefix: string = '!';
 
-  get commands(): Collection<string, BaseCommand> { return this._commands; }
-  get events(): Collection<string, BaseEvent> { return this._events; }
-  get prefix(): string { return this._prefix; }
-
-  set prefix(prefix: string) { this._prefix = prefix; }
-
-  constructor(opts: Options) {
-    this.client = client(opts);
+  constructor(authProvider: AuthProvider | undefined, options?: ChatClientOptions | undefined) {
+    super(authProvider, options);
   }
+
+  get commands(): Collection<string, BaseCommand> { return this._commands; }
+  get events(): Map<string, EventHandlerList> { return this._events; }
+  get prefix(): string { return this._prefix; }
+  set prefix(prefix: string) { this._prefix = prefix; }
 }
+
+
 export class TwitchMessage {
   manager: TwitchManager;
   target: string;
-  user: Userstate;
+  user: any;
   msg: string;
   self: boolean;
-  constructor(manager: TwitchManager, target: string, user: Userstate, msg: string, self: boolean) {
+  constructor(manager: TwitchManager, target: string, user: any, msg: string, self: boolean) {
     this.manager = manager;
     this.target = target;
     this.user = user;
@@ -37,15 +37,15 @@ export class TwitchMessage {
     this.self = self;
   }
   replyInChat(msg: string) {
-    this.manager.client.say(this.target, msg);
+    this.manager.say(this.target, msg);
 
   }
   replyInWhisper(msg: string) {
-    this.manager.client.whisper(this.user.username, msg)
+    this.manager.whisper(this.user.username, msg)
   }
 }
 export interface ChoobBotLocalSettings {
-  connectionSettings: Options;
+  connectionSettings: any;
   discordToken: string;
   consoleLog: boolean;
   extraInfoChannels: string[];

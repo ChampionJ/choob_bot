@@ -1,3 +1,5 @@
+import { PrivateMessage } from "twitch-chat-client/lib";
+import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchManager, TwitchMessage } from "../../types";
 import BaseCommand from "../../utils/structures/BaseCommand";
 
@@ -6,7 +8,7 @@ export default class TestCommand extends BaseCommand {
     super('test', 'testing', []);
   }
 
-  async run(client: TwitchManager, message: TwitchMessage, args: Array<string>) {
-    client.client.say(message.target, 'Test command works');
+  async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
+    client.say(targetChannel, 'Test command works');
   }
 }

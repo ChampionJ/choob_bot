@@ -5,6 +5,7 @@ import { TwitchManager } from "../../types";
 
 export default abstract class BaseEvent {
   logger = winston.loggers.get('main');
+
   constructor(private name: string) { }
 
   getName(): string { return this.name; }

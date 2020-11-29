@@ -1,4 +1,5 @@
 
+import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import winston from "winston";
 import { TwitchManager, TwitchMessage } from "../../types";
 
@@ -11,5 +12,5 @@ export default abstract class BaseCommand {
   getCategory(): string { return this.category; }
   getAliases(): Array<string> { return this.aliases; }
 
-  abstract run(client: TwitchManager, message: TwitchMessage, args: Array<string> | null): Promise<void>;
+  abstract run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string> | null): Promise<void>;
 }

@@ -1,18 +1,16 @@
 // https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-guildCreate
 
-import { RoomState } from 'tmi.js';
-import TwitchChannelConfig from '../database/schemas/ChannelConfig';
+import TwitchChannelConfig from '../database/schemas/TwitchChannelConfig';
 import { TwitchManager } from '../types';
+import StateManager from '../utils/StateManager';
 import BaseEvent from '../utils/structures/BaseEvent';
-
-
 
 export default class ChannelJoinEvent extends BaseEvent {
   constructor() {
-    super('roomstate');
+    super('onJoin');
   }
 
-  async run(client: TwitchManager, channel: string, state: RoomState) {
+  async run(client: TwitchManager, channel: string) {
 
     this.logger.info(`Joined ${channel}`)
     await TwitchChannelConfig.create({
@@ -24,6 +22,10 @@ export default class ChannelJoinEvent extends BaseEvent {
         this.logger.error(`Non-Duplicate error while creating ${channel} config in database`, err)
     })
 
-
+    await TwitchChannelConfig.findOne({ channelName: channel }).then((config) => {
+      if (config != null) {
+        StateManager.emit('twitchChannelPrefixFetched', channel, config.prefix)
+      }
+    }).catch(err => this.logger.error(err))
   }
 }

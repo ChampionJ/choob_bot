@@ -16,13 +16,15 @@
     "discord.js": "^12.5.0",
     "dotenv": "^8.2.0",
     "mongoose": "^5.10.15",
-    "tmi.js": "^1.5.0",
-    "winston": "^3.2.1"
+    "twitch": "^4.3.2",
+    "twitch-auth": "^4.3.2",
+    "twitch-chat-client": "^4.3.2",
+    "winston": "^3.2.1",
+    "ws": "^7.4.0"
   },
   "devDependencies": {
     "@types/mongoose": "^5.10.1",
     "@types/node": "^14.14.9",
-    "@types/tmi.js": "^1.4.2",
     "@types/ws": "^7.4.0",
     "cross-env": "^7.0.2",
     "nodemon": "^2.0.6",
