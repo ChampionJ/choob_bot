@@ -1,5 +1,5 @@
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
-import TwitchChannelConfig from "../../database/schemas/TwitchChannelConfig";
+import { TwitchChannelConfigModel } from "../../database/schemas/TwitchChannelConfig";
 import { TwitchManager } from "../../types";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
@@ -29,8 +29,14 @@ export default class MessageEvent extends BaseEvent {
       const command = client.commands.get(cmdName.toLowerCase().replace(/-/g, ""));
       if (command) {
         this.logger.debug('triggered: ' + command.getName())
-        if (command.getCategory() === 'admin') {
-          await TwitchChannelConfig.findOne({ channelName: targetChannel }).then((config) => {
+        if (command.getCategory() === 'superadmin') {
+
+          if (user === 'lord_durok') {
+            command.run(client, targetChannel, msgRaw, cmdArgs);
+          }
+        }
+        else if (command.getCategory() === 'admin') {
+          await TwitchChannelConfigModel.findOne({ channelName: targetChannel }).then((config) => {
             // this.logger.debug('Admin command check', config)
             if (config!.adminChannel!) {
               command.run(client, targetChannel, msgRaw, cmdArgs);
@@ -47,8 +53,8 @@ export default class MessageEvent extends BaseEvent {
     }
   }
 }
-StateManager.on('twitchChannelPrefixFetched', (channel, prefix) => {
-  console.log(`Fetched prefix for ${channel}: \"${prefix}\"`)
-  twitchChannelCommandPrefixes.set(channel, prefix)
+StateManager.on('twitchChannelConfigFetched', (channel, config) => {
+  console.log(`Fetched prefix for ${channel}: \"${config.prefix}\"`)
+  twitchChannelCommandPrefixes.set(channel, config.prefix)
 })
 

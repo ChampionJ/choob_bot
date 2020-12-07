@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from "@typegoose/typegoose";
 const mongoose = require('mongoose');
 
-class TwitchTokens {
+export class TwitchTokens {
   @prop({ required: true })
   public accessToken?: string;
   @prop({ required: true })
@@ -10,4 +10,4 @@ class TwitchTokens {
   public expiryTimestamp?: number;
 }
 
-export = getModelForClass(TwitchTokens)
+export const TwitchTokensModel = getModelForClass(TwitchTokens)

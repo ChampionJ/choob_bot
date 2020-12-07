@@ -5,7 +5,9 @@ import { ChoobBotLocalSettings, ChoobBotSettings, TwitchManager } from "./types"
 import { registerCommands, registerEvents } from "./utils/registry";
 import StateManager from './utils/StateManager';
 import { AccessToken, RefreshableAuthProvider, StaticAuthProvider, TokenInfo } from 'twitch-auth';
-import TwitchTokens from "./database/schemas/TwitchTokens";
+import { TwitchTokensModel } from "./database/schemas/TwitchTokens";
+import { ChoobMessage, ChoobMessageModel } from "./database/schemas/ChoobMessage";
+import { TwitchGiftedSubsMessage, TwitchGiftedSubsMessageModel } from "./database/schemas/TwitchGiftedSubsMessage";
 
 
 const util = require("util");
@@ -123,7 +125,7 @@ async function setupTwitch() {
   //   tokenData = JSON.parse(result.toString())
   // }).catch((err: any) => { console.log(err) })
 
-  tokenData = await TwitchTokens.findOne({});
+  tokenData = await TwitchTokensModel.findOne({});
 
   const auth = new RefreshableAuthProvider(
     new StaticAuthProvider(clientId, tokenData.accessToken),
@@ -137,7 +139,7 @@ async function setupTwitch() {
           refreshToken,
           expiryTimestamp: expiryDate === null ? undefined : expiryDate.getTime()
         };
-        await TwitchTokens.replaceOne({}, { accessToken: newTokenData.accessToken, refreshToken: newTokenData.refreshToken, expiryTimestamp: newTokenData.expiryTimestamp })
+        await TwitchTokensModel.replaceOne({}, { accessToken: newTokenData.accessToken, refreshToken: newTokenData.refreshToken, expiryTimestamp: newTokenData.expiryTimestamp })
       }
     }
   );
@@ -146,6 +148,36 @@ async function setupTwitch() {
 
   StateManager.on('ready', () => {
     logger.debug('onReady')
+  })
+  StateManager.on('setupDatabaseManually', async () => {
+
+    logger.info(`Adding choob messages to database from localdata`)
+
+    localdata.choob.messages.forEach(async element => {
+      await ChoobMessageModel.create({ message: element }).then((choobMessage: ChoobMessage) => {
+        logger.debug(`Added ${choobMessage.message} to database!`)
+      }).catch((err) => {
+        if (err.code !== 11000)
+          logger.error(`Non-Duplicate error while adding ${element} to database`, err)
+        if (err.code === 11000)
+          logger.error(`Duplicate object error while adding ${element} to database`, err)
+      })
+    });
+
+    logger.info(`Adding gifted subs to database from localdata`)
+
+
+
+    localdata.giftedsubs.forEach(async element => {
+      await TwitchGiftedSubsMessageModel.create({ message: element, forMultipleGifts: element.includes('{number}') }).then((giftMessage: TwitchGiftedSubsMessage) => {
+        logger.debug(`Added ${giftMessage.message} to database!`)
+      }).catch((err) => {
+        if (err.code !== 11000)
+          logger.error(`Non-Duplicate error while adding ${element} to database`, err)
+        if (err.code === 11000)
+          logger.error(`Duplicate object error while adding ${element} to database`, err)
+      })
+    });
   })
   await registerCommands(twitchManager, '../commands');
   await registerEvents(twitchManager, '../events');
