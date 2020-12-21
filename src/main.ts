@@ -8,6 +8,7 @@ import { AccessToken, RefreshableAuthProvider, StaticAuthProvider, TokenInfo } f
 import { TwitchTokensModel } from "./database/schemas/TwitchTokens";
 import { ChoobMessage, ChoobMessageModel } from "./database/schemas/ChoobMessage";
 import { TwitchGiftedSubsMessage, TwitchGiftedSubsMessageModel } from "./database/schemas/TwitchGiftedSubsMessage";
+import { TwitchChannelConfigModel } from "./database/schemas/TwitchChannelConfig";
 
 
 const util = require("util");
@@ -144,7 +145,20 @@ async function setupTwitch() {
     }
   );
 
-  twitchManager = new TwitchManager(auth, { channels: localdata.connectionSettings.channels });
+
+
+  let channels: string[] = [];
+  await TwitchChannelConfigModel.find({ botIsInChannel: true }).then((configs) => {
+    if (configs != null) {
+      configs.forEach(config => {
+        channels.push(config.channelName!);
+        StateManager.emit('twitchChannelConfigFetched', config)
+      });
+
+    }
+  }).catch(err => logger.error(err))
+
+  twitchManager = new TwitchManager(auth, { channels: channels });
 
   StateManager.on('ready', () => {
     logger.debug('onReady')

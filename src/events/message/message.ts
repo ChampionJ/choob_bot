@@ -1,15 +1,18 @@
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchChannelConfigModel } from "../../database/schemas/TwitchChannelConfig";
+import { TwitchUserModel } from "../../database/schemas/TwitchUsers";
 import { TwitchManager } from "../../types";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
-
-const twitchChannelCommandPrefixes = new Map();
 
 export default class MessageEvent extends BaseEvent {
   constructor() {
     super('onMessage');
 
+    StateManager.on('twitchChannelConfigFetched', (config) => {
+      this.logger.debug(`Fetched prefix for ${config.channelName}: \"${config.prefix}\"`)
+      //twitchChannelCommandPrefixes.set(config.channelName, config.prefix)
+    })
   }
 
   async run(client: TwitchManager, targetChannel: string, user: string, message: string, msgRaw: TwitchPrivateMessage) {
@@ -19,7 +22,7 @@ export default class MessageEvent extends BaseEvent {
 
     //if () return;
 
-    const prefix = twitchChannelCommandPrefixes.get(targetChannel) || '!';
+    const prefix = StateManager.twitchChannelConfigs.get(targetChannel)?.prefix! || '!';
 
     if (message.startsWith(prefix)) {
       const [cmdName, ...cmdArgs] = message
@@ -28,33 +31,42 @@ export default class MessageEvent extends BaseEvent {
         .split(/\s+/);
       const command = client.commands.get(cmdName.toLowerCase().replace(/-/g, ""));
       if (command) {
+        const commandCategory = command.getCategory();
+        const commandPermissionLevel = command.getPermissionLevel();
         this.logger.debug('triggered: ' + command.getName())
-        if (command.getCategory() === 'superadmin') {
 
-          if (user === 'lord_durok') {
-            command.run(client, targetChannel, msgRaw, cmdArgs);
-          }
-        }
-        else if (command.getCategory() === 'admin') {
-          await TwitchChannelConfigModel.findOne({ channelName: targetChannel }).then((config) => {
+        if (commandPermissionLevel > 0) {
+          this.logger.debug(`checking permissions for ${user}...`)
+          await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
             // this.logger.debug('Admin command check', config)
-            if (config!.adminChannel!) {
+            if (twitchUserData) {
+              if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
+                this.logger.debug(`${user} has required permission level!`)
+                command.run(client, targetChannel, msgRaw, cmdArgs);
+              }
+            }
+          }).catch(err => this.logger.error('Error fetching permissions', err))
+        } else {
+          if (commandCategory === 'channelBroadcaster') {
+            if (msgRaw.userInfo.isBroadcaster) {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
-          }).catch(err => this.logger.error(err))
-        } else if (command.getCategory() === 'moderator') {
-          if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
+          }
+          else if (commandCategory === 'moderator') {
+            if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
+              command.run(client, targetChannel, msgRaw, cmdArgs);
+            }
+          } else if (commandCategory === 'choobChannelOnly') {
+            if (targetChannel === '#choob_bot') {
+              command.run(client, targetChannel, msgRaw, cmdArgs);
+            }
+          } else {
             command.run(client, targetChannel, msgRaw, cmdArgs);
           }
-        } else {
-          command.run(client, targetChannel, msgRaw, cmdArgs);
         }
       }
     }
   }
 }
-StateManager.on('twitchChannelConfigFetched', (channel, config) => {
-  console.log(`Fetched prefix for ${channel}: \"${config.prefix}\"`)
-  twitchChannelCommandPrefixes.set(channel, config.prefix)
-})
+
 

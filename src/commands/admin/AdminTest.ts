@@ -1,17 +1,17 @@
 
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
 import { TwitchManager, TwitchMessage } from '../../types';
+import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
 
 
 export default class AdminTestCommand extends BaseCommand {
   constructor() {
-    super('admintest', 'admin', []);
+    super('admintest', 'admin', 50, []);
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
     client.say(targetChannel, 'AdminTest command works');
-    this.logger.debug(message.channelId!);
-    this.logger.debug(args)
-    this.logger.debug(client.commands.size.toString())
+    this.logger.debug('AdminTest command works');
+    //StateManager.emit('setupDatabaseManually')
   }
 }

@@ -5,7 +5,7 @@ import BaseCommand from "../../utils/structures/BaseCommand";
 
 export default class TestCommand extends BaseCommand {
   constructor() {
-    super('test', 'testing', []);
+    super('test', 'testing', 0, []);
   }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {

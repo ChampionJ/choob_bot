@@ -8,6 +8,8 @@ export class TwitchChannelConfig {
   public prefix?: string;
   @prop({ required: true, default: false })
   public adminChannel?: boolean;
+  @prop({ required: true, default: true })
+  public botIsInChannel?: boolean;
   @prop({ required: true, default: false })
   public reactToGiftedSubs?: boolean;
 }
