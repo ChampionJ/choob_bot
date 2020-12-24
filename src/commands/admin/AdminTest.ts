@@ -1,6 +1,6 @@
 
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
-import { TwitchManager, TwitchMessage } from '../../types';
+import { TwitchManager } from "../../utils/TwitchClientManager";
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
 

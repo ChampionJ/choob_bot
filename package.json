@@ -18,7 +18,7 @@
     "mongoose": "^5.10.15",
     "twitch": "^4.3.2",
     "twitch-auth": "^4.3.2",
-    "twitch-chat-client": "^4.3.2",
+    "twitch-chat-client": "^4.3.6",
     "winston": "^3.2.1",
     "ws": "^7.4.0"
   },

@@ -1,9 +1,9 @@
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchChannelConfigModel } from "../../database/schemas/TwitchChannelConfig";
 import { TwitchUserModel } from "../../database/schemas/TwitchUsers";
-import { TwitchManager } from "../../types";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
+import { TwitchManager } from "../../utils/TwitchClientManager";
 
 export default class MessageEvent extends BaseEvent {
   constructor() {
@@ -29,39 +29,43 @@ export default class MessageEvent extends BaseEvent {
         .slice(prefix.length)
         .trim()
         .split(/\s+/);
-      const command = client.commands.get(cmdName.toLowerCase().replace(/-/g, ""));
-      if (command) {
-        const commandCategory = command.getCategory();
-        const commandPermissionLevel = command.getPermissionLevel();
-        this.logger.debug('triggered: ' + command.getName())
+      const commandName = client.commandAliases.get(cmdName.toLowerCase().replace(/-/g, ""));
 
-        if (commandPermissionLevel > 0) {
-          this.logger.debug(`checking permissions for ${user}...`)
-          await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
-            // this.logger.debug('Admin command check', config)
-            if (twitchUserData) {
-              if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
-                this.logger.debug(`${user} has required permission level!`)
+      if (commandName) {
+        const command = client.commands.get(commandName);
+        if (command) {
+          const commandCategory = command.getCategory();
+          const commandPermissionLevel = command.getPermissionLevel();
+          this.logger.debug('triggered: ' + command.getName())
+
+          if (commandPermissionLevel > 0) {
+            this.logger.debug(`checking permissions for ${user}...`)
+            await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
+              // this.logger.debug('Admin command check', config)
+              if (twitchUserData) {
+                if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
+                  this.logger.debug(`${user} has required permission level!`)
+                  command.run(client, targetChannel, msgRaw, cmdArgs);
+                }
+              }
+            }).catch(err => this.logger.error('Error fetching permissions', err))
+          } else {
+            if (commandCategory === 'channelBroadcaster') {
+              if (msgRaw.userInfo.isBroadcaster) {
                 command.run(client, targetChannel, msgRaw, cmdArgs);
               }
             }
-          }).catch(err => this.logger.error('Error fetching permissions', err))
-        } else {
-          if (commandCategory === 'channelBroadcaster') {
-            if (msgRaw.userInfo.isBroadcaster) {
+            else if (commandCategory === 'moderator') {
+              if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
+                command.run(client, targetChannel, msgRaw, cmdArgs);
+              }
+            } else if (commandCategory === 'choobChannelOnly') {
+              if (targetChannel === '#choob_bot') {
+                command.run(client, targetChannel, msgRaw, cmdArgs);
+              }
+            } else {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
-          }
-          else if (commandCategory === 'moderator') {
-            if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
-              command.run(client, targetChannel, msgRaw, cmdArgs);
-            }
-          } else if (commandCategory === 'choobChannelOnly') {
-            if (targetChannel === '#choob_bot') {
-              command.run(client, targetChannel, msgRaw, cmdArgs);
-            }
-          } else {
-            command.run(client, targetChannel, msgRaw, cmdArgs);
           }
         }
       }

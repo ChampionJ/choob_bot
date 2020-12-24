@@ -1,8 +1,7 @@
 
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import winston from "winston";
-import { TwitchManager, TwitchMessage } from "../../types";
-
+import { TwitchManager } from "../TwitchClientManager";
 
 export default abstract class BaseCommand {
   logger = winston.loggers.get('main');

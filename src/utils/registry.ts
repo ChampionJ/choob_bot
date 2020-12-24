@@ -1,7 +1,9 @@
 import path from "path";
 import { promises as fs } from 'fs';
-import { TwitchManager } from "../types";
+import { TwitchManager } from "./TwitchClientManager";
 import BaseEvent from "./structures/BaseEvent";
+import { SimpleCommandModel } from "../database/schemas/SimpleCommand";
+import BaseSimpleCommand from "./structures/BaseSimpleCommand";
 
 export async function registerCommands(client: TwitchManager, dir: string = '') {
   const filePath = path.join(__dirname, dir);
@@ -12,12 +14,18 @@ export async function registerCommands(client: TwitchManager, dir: string = '') 
     if (file.endsWith('.js') || file.endsWith('.ts')) {
       const { default: Command } = await import(path.join(dir, file));
       const command = new Command();
-      client.commands.set(command.getName(), command);
-      command.getAliases().forEach((alias: string) => {
-        client.commands.set(alias, command);
-      });
+      client.addCommand(command);
     }
   }
+
+  await SimpleCommandModel.find({}).then((commandModels) => {
+    if (commandModels != null) {
+      commandModels.forEach(commandModel => {
+        const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)
+        client.addCommand(simpleCommand);
+      });
+    }
+  }).catch(err => client.logger.error(err))
 }
 
 export async function registerEvents(client: TwitchManager, dir: string = '') {

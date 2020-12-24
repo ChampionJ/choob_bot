@@ -1,6 +1,6 @@
-import { TwitchManager } from "../../types";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
+import { TwitchManager } from "../../utils/TwitchClientManager";
 
 export default class ConnectedEvent extends BaseEvent {
   constructor() {

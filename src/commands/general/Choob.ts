@@ -1,6 +1,5 @@
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
-import { ChoobMessage, ChoobMessageModel } from '../../database/schemas/ChoobMessage';
-import { TwitchManager, TwitchMessage } from '../../types';
+import { TwitchManager } from "../../utils/TwitchClientManager";
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
 
@@ -11,7 +10,7 @@ export default class ChoobCommand extends BaseCommand {
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
 
-    //TODO: should cache all the choob quotes locally, so not having to count the entire database. 
+
     let choobIndexCount = StateManager.choobs.length;
     let choobQuote = StateManager.choobs[Math.floor(Math.random() * choobIndexCount)];
 

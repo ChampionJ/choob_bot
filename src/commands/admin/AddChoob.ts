@@ -1,9 +1,10 @@
 
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
 import { ChoobMessage, ChoobMessageModel } from '../../database/schemas/ChoobMessage';
-import { stringSimilarity, TwitchManager, TwitchMessage } from '../../types';
+import { stringSimilarity } from '../../types';
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
+import { TwitchManager } from '../../utils/TwitchClientManager';
 
 
 export default class AddChoobCommand extends BaseCommand {

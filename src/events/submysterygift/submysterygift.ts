@@ -1,9 +1,9 @@
 import { logger } from "@typegoose/typegoose/lib/logSettings";
 import { ChatCommunitySubInfo, UserNotice } from "twitch-chat-client/lib";
 import { TwitchGiftedSubsMessage, TwitchGiftedSubsMessageModel } from "../../database/schemas/TwitchGiftedSubsMessage";
-import { TwitchManager } from "../../types";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
+import { TwitchManager } from "../../utils/TwitchClientManager";
 
 
 
@@ -21,11 +21,10 @@ export default class ConnectedEvent extends BaseEvent {
         let giftQuote: TwitchGiftedSubsMessage | null;// = localdata.giftedsubs[0];
         if (subInfo.count > 1) {
           //giftQuote = localdata.giftedsubs[Math.floor(Math.random() * giftIndexCount)];
-          let giftIndexCount = await TwitchGiftedSubsMessageModel.estimatedDocumentCount();
-          giftQuote = await TwitchGiftedSubsMessageModel.findOne({}).skip(Math.floor(Math.random() * giftIndexCount))
+          giftQuote = StateManager.giftedSubQuotes[Math.floor(Math.random() * StateManager.giftedSubQuotes.length)]
         } else {
-          let giftIndexCount = await TwitchGiftedSubsMessageModel.countDocuments({ forMultipleGifts: false })
-          giftQuote = await TwitchGiftedSubsMessageModel.findOne({ forMultipleGifts: false }).skip(Math.floor(Math.random() * giftIndexCount))
+          const filteredQuotes = StateManager.giftedSubQuotes.filter(val => val.forMultipleGifts);
+          giftQuote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)]
         }
         if (giftQuote) {
           client.say(channel, giftQuote!.message!.replace('{gifter}', username).replace('{number}', subInfo.count.toString()));

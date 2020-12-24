@@ -1,7 +1,5 @@
 import winston from "winston";
-import { TwitchManager } from "../../types";
-
-
+import { TwitchManager } from "../TwitchClientManager";
 
 export default abstract class BaseEvent {
   logger = winston.loggers.get('main');

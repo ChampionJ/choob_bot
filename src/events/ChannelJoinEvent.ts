@@ -1,9 +1,9 @@
 // https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-guildCreate
 
 import { TwitchChannelConfig, TwitchChannelConfigModel } from '../database/schemas/TwitchChannelConfig';
-import { TwitchManager } from '../types';
 import StateManager from '../utils/StateManager';
 import BaseEvent from '../utils/structures/BaseEvent';
+import { TwitchManager } from '../utils/TwitchClientManager';
 
 export default class ChannelJoinEvent extends BaseEvent {
   constructor() {
