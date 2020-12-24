@@ -32,11 +32,6 @@ export default class ChannelJoinEvent extends BaseEvent {
       }).catch((err) => {
         this.logger.error(`Wrror while creating ${channel} config in database`, err)
       })
-      // await TwitchChannelConfigModel.findOne({ channelName: channel }).then((config) => {
-      //   if (config != null) {
-      //     StateManager.emit('twitchChannelConfigFetched', config)
-      //   }
-      // }).catch(err => this.logger.error(err))
     }
   }
 }

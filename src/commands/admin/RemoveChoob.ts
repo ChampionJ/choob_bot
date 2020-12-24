@@ -33,7 +33,6 @@ export default class RemoveChoobCommand extends BaseCommand {
       await ChoobMessageModel.deleteOne({ message: removalChoob }).then((res) => {
         if (res.ok === 1) {
           client.say(targetChannel, `Removed ${removalChoob} from choob collection!`)
-          StateManager.emit('choobRemoved', removalIndex, removalChoob);
         }
       })
     } else {

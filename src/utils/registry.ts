@@ -21,8 +21,8 @@ export async function registerCommands(client: TwitchManager, dir: string = '') 
   await SimpleCommandModel.find({}).then((commandModels) => {
     if (commandModels != null) {
       commandModels.forEach(commandModel => {
-        const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)
-        client.addCommand(simpleCommand);
+        //const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)
+        client.addSimpleCommand(commandModel);
       });
     }
   }).catch(err => client.logger.error(err))

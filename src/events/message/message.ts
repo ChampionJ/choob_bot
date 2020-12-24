@@ -17,11 +17,7 @@ export default class MessageEvent extends BaseEvent {
 
   async run(client: TwitchManager, targetChannel: string, user: string, message: string, msgRaw: TwitchPrivateMessage) {
 
-    //let message: TwitchMessage = new TwitchMessage(client, targetChannel, msgRaw.userInfo, msg, self)
     this.logger.debug(`${targetChannel} | ${user}: ${message}`)
-
-    //if () return;
-
     const prefix = StateManager.twitchChannelConfigs.get(targetChannel)?.prefix! || '!';
 
     if (message.startsWith(prefix)) {
@@ -47,6 +43,8 @@ export default class MessageEvent extends BaseEvent {
                   this.logger.debug(`${user} has required permission level!`)
                   command.run(client, targetChannel, msgRaw, cmdArgs);
                 }
+              } else {
+                // TODO: check if they're a mod of an approved channel, and then add them to the user database?
               }
             }).catch(err => this.logger.error('Error fetching permissions', err))
           } else {

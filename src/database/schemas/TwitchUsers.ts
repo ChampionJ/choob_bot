@@ -1,7 +1,7 @@
-import { getModelForClass, prop } from "@typegoose/typegoose";
-const mongoose = require('mongoose');
+import { getModelForClass, mongoose, prop } from "@typegoose/typegoose";
 
 export class TwitchUser {
+  _id?: mongoose.Types.ObjectId;
   @prop({ required: true, unique: true })
   public username?: string;
   @prop({ required: true, default: 0 })
