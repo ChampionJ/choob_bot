@@ -1,10 +1,10 @@
 
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
-import winston from "winston";
+import { ChoobLogger } from "../Logging";
 import { TwitchManager } from "../TwitchClientManager";
 
 export default abstract class BaseCommand {
-  logger = winston.loggers.get('main');
+  logger = ChoobLogger;
   constructor(private name: string, private category: string, private permissionLevel: number, private aliases: Array<string>) { }
 
   getName(): string { return this.name; }

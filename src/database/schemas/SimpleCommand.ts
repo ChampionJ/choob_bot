@@ -1,14 +1,21 @@
 import { getModelForClass, index, mongoose, prop, queryMethod, ReturnModelType } from "@typegoose/typegoose";
-export class SimpleCommand {
+import BaseCommand from "../../utils/structures/BaseCommand";
+
+export class CustomCommandInfo {
+  @prop({ required: true })
+  name!: string
+  @prop({})
+  channel!: string
+}
+export class CustomCommand {
   _id?: mongoose.Types.ObjectId;
   @prop({ required: true, unique: true })
-  public commandName?: string;
-  @prop({ default: [] })
-  public commandAliases?: string[];
+  public info!: CustomCommandInfo;
+  @prop({ default: [], type: [String] })
+  public aliases?: string[];
   @prop({ required: true })
-  public commandResponse?: string;
+  public response!: string;
   @prop({ default: false })
   public replyInDM?: false;
-
 }
-export const SimpleCommandModel = getModelForClass(SimpleCommand)
+export const CustomCommandModel = getModelForClass(CustomCommand)

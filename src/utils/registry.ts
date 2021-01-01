@@ -2,7 +2,7 @@ import path from "path";
 import { promises as fs } from 'fs';
 import { TwitchManager } from "./TwitchClientManager";
 import BaseEvent from "./structures/BaseEvent";
-import { SimpleCommandModel } from "../database/schemas/SimpleCommand";
+import { CustomCommandModel } from "../database/schemas/SimpleCommand";
 import BaseSimpleCommand from "./structures/BaseSimpleCommand";
 
 export async function registerCommands(client: TwitchManager, dir: string = '') {
@@ -18,14 +18,14 @@ export async function registerCommands(client: TwitchManager, dir: string = '') 
     }
   }
 
-  await SimpleCommandModel.find({}).then((commandModels) => {
+  await CustomCommandModel.find({}).then((commandModels) => {
     if (commandModels != null) {
       commandModels.forEach(commandModel => {
         //const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)
         client.addSimpleCommand(commandModel);
       });
     }
-  }).catch(err => client.logger.error(err))
+  }).catch(err => client.logger.error(err, err))
 }
 
 export async function registerEvents(client: TwitchManager, dir: string = '') {

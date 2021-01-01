@@ -25,48 +25,51 @@ export default class MessageEvent extends BaseEvent {
         .slice(prefix.length)
         .trim()
         .split(/\s+/);
-      const commandName = client.commandAliases.get(cmdName.toLowerCase().replace(/-/g, ""));
 
-      if (commandName) {
-        const command = client.commands.get(commandName);
-        if (command) {
-          const commandCategory = command.getCategory();
-          const commandPermissionLevel = command.getPermissionLevel();
-          this.logger.debug('triggered: ' + command.getName())
+      const command = client.tryGetCommand(targetChannel, cmdName.toLowerCase().replace(/-/g, ""));
+      //const commandName = client.commandAliases.get(cmdName.toLowerCase().replace(/-/g, ""));
 
-          if (commandPermissionLevel > 0) {
-            this.logger.debug(`checking permissions for ${user}...`)
-            await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
-              // this.logger.debug('Admin command check', config)
-              if (twitchUserData) {
-                if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
-                  this.logger.debug(`${user} has required permission level!`)
-                  command.run(client, targetChannel, msgRaw, cmdArgs);
-                }
-              } else {
-                // TODO: check if they're a mod of an approved channel, and then add them to the user database?
-              }
-            }).catch(err => this.logger.error('Error fetching permissions', err))
-          } else {
-            if (commandCategory === 'channelBroadcaster') {
-              if (msgRaw.userInfo.isBroadcaster) {
-                command.run(client, targetChannel, msgRaw, cmdArgs);
-              }
-            }
-            else if (commandCategory === 'moderator') {
-              if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
-                command.run(client, targetChannel, msgRaw, cmdArgs);
-              }
-            } else if (commandCategory === 'choobChannelOnly') {
-              if (targetChannel === '#choob_bot') {
+      // if (commandName) {
+      //   const command = client.commands.get(commandName);
+
+      if (command) {
+        const commandCategory = command.getCategory();
+        const commandPermissionLevel = command.getPermissionLevel();
+        this.logger.debug('triggered: ' + command.getName())
+
+        if (commandPermissionLevel > 0) {
+          this.logger.debug(`checking permissions for ${user}...`)
+          await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
+            // this.logger.debug('Admin command check', config)
+            if (twitchUserData) {
+              if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
+                this.logger.debug(`${user} has required permission level!`)
                 command.run(client, targetChannel, msgRaw, cmdArgs);
               }
             } else {
+              // TODO: check if they're a mod of an approved channel, and then add them to the user database?
+            }
+          }).catch(err => this.logger.error('Error fetching permissions', err))
+        } else {
+          if (commandCategory === 'channelBroadcaster') {
+            if (msgRaw.userInfo.isBroadcaster) {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
           }
+          else if (commandCategory === 'moderator') {
+            if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
+              command.run(client, targetChannel, msgRaw, cmdArgs);
+            }
+          } else if (commandCategory === 'choobChannelOnly') {
+            if (targetChannel === '#choob_bot') {
+              command.run(client, targetChannel, msgRaw, cmdArgs);
+            }
+          } else {
+            command.run(client, targetChannel, msgRaw, cmdArgs);
+          }
         }
       }
+
     }
   }
 }

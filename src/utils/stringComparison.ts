@@ -1,9 +1,17 @@
-export function stringSimilarity(s1: string, s2: string) {
-  var longer = s1;
-  var shorter = s2;
-  if (s1.length < s2.length) {
-    longer = s2;
-    shorter = s1;
+/**
+ * Check the similarity between two strings
+ *
+ * @export
+ * @param {string} firstString
+ * @param {string} secondString
+ * @return {number} the similarity of strings as a value between 0 and 1
+ */
+export function stringSimilarity(firstString: string, secondString: string): number {
+  var longer = firstString;
+  var shorter = secondString;
+  if (firstString.length < secondString.length) {
+    longer = secondString;
+    shorter = firstString;
   }
   var longerLength = longer.length;
   if (longerLength == 0) {

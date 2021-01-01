@@ -1,4 +1,6 @@
+import { mongoose } from '@typegoose/typegoose';
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
+import { CustomCommand } from '../../database/schemas/SimpleCommand';
 import { TwitchChannelConfigModel } from '../../database/schemas/TwitchChannelConfig';
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
@@ -6,18 +8,17 @@ import { TwitchManager } from '../TwitchClientManager';
 
 export default class BaseSimpleCommand extends BaseCommand {
   responseString: string;
-  shouldDMInstead = false;
 
-  constructor(name: string, commandString: string, aliases: string[] = [], sendDMInstead = false) {
-    super(name, 'general', 0, aliases);
-    this.responseString = this.ParseForStaticVars(commandString);
-    this.shouldDMInstead = sendDMInstead;
+
+  constructor(private data: CustomCommand) {
+    super(data.info.name!, 'general', 0, data.aliases!);
+    this.responseString = this.ParseForStaticVars(data.response!);
   }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
 
     const replyMessage: string = await this.ParseForVars(message, targetChannel)
-    if (this.shouldDMInstead) {
+    if (this.data.replyInDM) {
       client.whisper(message.userInfo.userName, replyMessage);
     } else {
       client.say(targetChannel, replyMessage);

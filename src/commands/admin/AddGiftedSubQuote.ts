@@ -1,7 +1,7 @@
 
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
 import { TwitchGiftedSubsMessage, TwitchGiftedSubsMessageModel } from '../../database/schemas/TwitchGiftedSubsMessage';
-import { stringSimilarity } from '../../types';
+import { stringSimilarity } from '../../utils/stringComparison';
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
 import { TwitchManager } from '../../utils/TwitchClientManager';

@@ -1,8 +1,8 @@
-import winston from "winston";
+import { ChoobLogger } from "../Logging";
 import { TwitchManager } from "../TwitchClientManager";
 
 export default abstract class BaseEvent {
-  logger = winston.loggers.get('main');
+  logger = ChoobLogger;
 
   constructor(private name: string) { }
 
