@@ -1,6 +1,6 @@
 require('dotenv').config()
 import { Client, Message, User } from "discord.js";
-import { registerCommands, registerEvents } from "./utils/registry";
+import { registerCommands, registerDatabaseCommands, registerEvents } from "./utils/registry";
 import StateManager from './utils/StateManager';
 import { AccessToken, RefreshableAuthProvider, StaticAuthProvider, TokenInfo } from 'twitch-auth';
 import { TwitchTokensModel } from "./database/schemas/TwitchTokens";
@@ -8,7 +8,7 @@ import { TwitchChannelConfigModel } from "./database/schemas/TwitchChannelConfig
 import { TwitchManager } from "./utils/TwitchClientManager";
 import { ChoobLogger } from "./utils/Logging";
 import BaseSimpleCommand from "./utils/structures/BaseSimpleCommand";
-import { CustomCommandModel } from "./database/schemas/SimpleCommand";
+import { TwitchCustomCommand, TwitchCustomCommandInfo, TwitchCustomCommandModel } from "./database/schemas/SimpleCommand";
 
 const util = require("util");
 const Discord = require('discord.js');
@@ -80,17 +80,25 @@ async function setupTwitch() {
   })
   StateManager.on('setupDatabaseManually', async () => {
 
+    // let tcc: TwitchCustomCommand[] = [];
     // await CustomCommandModel.find({}).then((commands) => {
     //   commands.forEach(command => {
-    //     let name = command.info.channel;
-    //     let channel = command.info.name;
-    //     command.info.name = name;
-    //     command.info.channel = channel;
-    //     command.save();
+    //     let temp = new TwitchCustomCommand();
+    //     temp.info = new TwitchCustomCommandInfo();
+    //     temp.info.channel = command.info.channel;
+    //     temp.info.name = command.info.name;
+    //     temp.response = command.response;
+    //     tcc.push(temp)
     //   });
     // })
+    // tcc.forEach(tc => {
+    //   TwitchCustomCommandModel.create({ info: { name: tc.info.name, channel: tc.info.channel }, response: tc.response, replyInDM: false })
+    // });
+    //TwitchCustomCommandModel.create({ info: { name: 'choobcountalias', channel: '*' }, alias: twitchManager.channelCustomCommandAliases.get('*')?.get('choobcount'), replyInDM: false })
+
   })
   await registerCommands(twitchManager, '../commands');
+  await registerDatabaseCommands(twitchManager);
   await registerEvents(twitchManager, '../events');
   await twitchManager.connect();
 }

@@ -2,8 +2,9 @@ import path from "path";
 import { promises as fs } from 'fs';
 import { TwitchManager } from "./TwitchClientManager";
 import BaseEvent from "./structures/BaseEvent";
-import { CustomCommandModel } from "../database/schemas/SimpleCommand";
+import { TwitchCustomCommand, TwitchCustomCommandModel } from "../database/schemas/SimpleCommand";
 import BaseSimpleCommand from "./structures/BaseSimpleCommand";
+import { ChoobLogger } from "./Logging";
 
 export async function registerCommands(client: TwitchManager, dir: string = '') {
   const filePath = path.join(__dirname, dir);
@@ -17,8 +18,10 @@ export async function registerCommands(client: TwitchManager, dir: string = '') 
       client.addCommand(command);
     }
   }
-
-  await CustomCommandModel.find({}).then((commandModels) => {
+}
+export async function registerDatabaseCommands(client: TwitchManager) {
+  await TwitchCustomCommandModel.find({}).then((commandModels) => {
+    ChoobLogger.debug(`Fetched command models. Got ${commandModels.length}`)
     if (commandModels != null) {
       commandModels.forEach(commandModel => {
         //const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)

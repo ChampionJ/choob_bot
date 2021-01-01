@@ -1,5 +1,5 @@
 import { getModelForClass, mongoose, prop } from "@typegoose/typegoose";
-import { CustomCommand } from "./SimpleCommand";
+import { TwitchCustomCommand } from "./SimpleCommand";
 
 export class TwitchChannelConfig {
   _id?: mongoose.Types.ObjectId;
@@ -14,10 +14,10 @@ export class TwitchChannelConfig {
   @prop({ required: true, default: false })
   public reactToGiftedSubs?: boolean;
   @prop({ type: Map })
-  public customCommands: Map<string, CustomCommand>;
+  public customCommands: Map<string, TwitchCustomCommand>;
 
   constructor() {
-    this.customCommands = new Map<string, CustomCommand>();
+    this.customCommands = new Map<string, TwitchCustomCommand>();
   }
 }
 export const TwitchChannelConfigModel = getModelForClass(TwitchChannelConfig)

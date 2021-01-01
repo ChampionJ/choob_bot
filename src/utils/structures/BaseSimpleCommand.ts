@@ -1,6 +1,6 @@
 import { mongoose } from '@typegoose/typegoose';
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
-import { CustomCommand } from '../../database/schemas/SimpleCommand';
+import { TwitchCustomCommand, TwitchCustomCommandInfo } from '../../database/schemas/SimpleCommand';
 import { TwitchChannelConfigModel } from '../../database/schemas/TwitchChannelConfig';
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
@@ -10,10 +10,12 @@ export default class BaseSimpleCommand extends BaseCommand {
   responseString: string;
 
 
-  constructor(private data: CustomCommand) {
-    super(data.info.name!, 'general', 0, data.aliases!);
-    this.responseString = this.ParseForStaticVars(data.response!);
+  constructor(private _data: TwitchCustomCommand) {
+    super(_data.info.name!, 'general', 0, []);
+    this.responseString = this.ParseForStaticVars(_data.response!);
   }
+
+  get data(): TwitchCustomCommand { return this._data }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
 

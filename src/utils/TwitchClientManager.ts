@@ -4,16 +4,16 @@ import StateManager from "./StateManager";
 import BaseCommand from "./structures/BaseCommand";
 import { EventHandlerList } from "ircv3/lib/IrcClient"
 import BaseSimpleCommand from "./structures/BaseSimpleCommand";
-import { CustomCommand, CustomCommandModel } from "../database/schemas/SimpleCommand";
+import { TwitchCustomCommand, TwitchCustomCommandInfo, TwitchCustomCommandModel } from "../database/schemas/SimpleCommand";
 import { ChatClient } from "twitch-chat-client";
 import { mongoose, DocumentType } from "@typegoose/typegoose";
 import { ChangeEvent } from "mongodb";
 import winston from "winston";
 
-interface SimpleCommandInfo {
-  commandName: string,
-  channelName: string
-}
+// interface SimpleCommandInfo {
+//   commandName: string,
+//   channelName: string
+// }
 
 export class TwitchManager extends ChatClient {
   [index: string]: any;
@@ -21,8 +21,8 @@ export class TwitchManager extends ChatClient {
   private _commands = new Collection<string, BaseCommand>();
   private _commandAliases = new Collection<string, string>();
 
-  private _simpleCommandObjectIDs = new Collection<mongoose.Types.ObjectId, SimpleCommandInfo>();
-  private _channelCustomCommands = new Collection<string, Collection<string, BaseSimpleCommand>>();
+  private _simpleCommandObjectIDs = new Collection<string, TwitchCustomCommand>();
+  private _channelCustomCommands = new Collection<string, BaseSimpleCommand>();
   private _channelCustomCommandAliases = new Collection<string, Collection<string, string>>(); //channel name returns all aliases : commandName
 
 
@@ -34,7 +34,7 @@ export class TwitchManager extends ChatClient {
   constructor(authProvider: AuthProvider | undefined, options?: any | undefined) {
     super(authProvider, options);
     StateManager.on('commandUpdated', this.commandUpdated);
-    CustomCommandModel.watch(undefined, { fullDocument: 'updateLookup' }).on('change', (change) => this.onSimpleCommandChange(change))
+    TwitchCustomCommandModel.watch(undefined, { fullDocument: 'updateLookup' }).on('change', (change) => this.onSimpleCommandChange(change))
   }
 
   tryGetCommand(channel: string, command: string): BaseCommand | undefined {
@@ -44,14 +44,19 @@ export class TwitchManager extends ChatClient {
     }
     const test = this.channelCustomCommandAliases.get("*")?.keyArray();
     this.logger.debug(test!)
-    const globalCommandName = this.channelCustomCommandAliases.get("*")?.get(command);
-    if (globalCommandName) {
-      return this._channelCustomCommands.get("*")?.get(globalCommandName);
+    const globalCommandID = this.channelCustomCommandAliases.get("*")?.get(command);
+    if (globalCommandID) {
+      this.logger.debug(`Found global id: ${globalCommandID}`)
+      const res = this._channelCustomCommands.keyArray();
+      res.forEach(element => {
+        this.logger.debug(element)
+      });
+      return this._channelCustomCommands.get(globalCommandID);
 
     }
-    const channelCommandName = this.channelCustomCommandAliases.get(channel)?.get(command);
-    if (channelCommandName) {
-      return this._channelCustomCommands.get(channel)?.get(channelCommandName);
+    const channelCommandID = this.channelCustomCommandAliases.get(channel)?.get(command);
+    if (channelCommandID) {
+      return this._channelCustomCommands.get(channelCommandID);
     }
     return undefined;
   }
@@ -59,33 +64,23 @@ export class TwitchManager extends ChatClient {
   get commands(): Collection<string, BaseCommand> { return this._commands; }
   get commandAliases(): Collection<string, string> { return this._commandAliases; }
 
-  get simpleCommandObjectIDs(): Collection<mongoose.Types.ObjectId, SimpleCommandInfo> { return this._simpleCommandObjectIDs; }
-  get channelCustomCommands(): Collection<string, Collection<string, BaseSimpleCommand>> { return this._channelCustomCommands; }
+  get simpleCommandObjectIDs(): Collection<string, TwitchCustomCommand> { return this._simpleCommandObjectIDs; }
+  get channelCustomCommands(): Collection<string, BaseSimpleCommand> { return this._channelCustomCommands; }
   get channelCustomCommandAliases(): Collection<string, Collection<string, string>> { return this._channelCustomCommandAliases; }
 
   get events(): Map<string, EventHandlerList> { return this._events; }
   get prefix(): string { return this._prefix; }
   set prefix(prefix: string) { this._prefix = prefix; }
   /** */
-  commandUpdated(oldCommandInfo: SimpleCommandInfo, updatedCommand: CustomCommand | undefined) {
+  commandUpdated(oldCommand: TwitchCustomCommand, updatedCommand: TwitchCustomCommand | undefined) {
 
-    // Delete all aliases of old command, could probably just check to see if they actually changed at all but eh
-    this.channelCustomCommands.get(oldCommandInfo.channelName)?.get(oldCommandInfo.commandName)?.getAliases().forEach(alias => {
-      this.channelCustomCommandAliases.get(oldCommandInfo.channelName)?.delete(alias);
-    });
-    this.channelCustomCommandAliases.get(oldCommandInfo.channelName)?.delete(oldCommandInfo.commandName);;
-
-    const objID = this._simpleCommandObjectIDs.findKey((value) => value === oldCommandInfo)
-    this._simpleCommandObjectIDs.delete(objID!)
-
-    // Delete old command
-    this.channelCustomCommands.get(oldCommandInfo.channelName)?.delete(oldCommandInfo.commandName);
+    this.channelCustomCommands.delete(oldCommand._id.toHexString());
+    this.channelCustomCommandAliases.get(oldCommand.info.channel)?.delete(oldCommand.info.name)
+    this._simpleCommandObjectIDs.delete(oldCommand._id.toHexString())
 
     // If we didn't delete the command entierly from the database:
     if (updatedCommand) {
       this.addSimpleCommand(updatedCommand)
-      // const simpleCommand = new BaseSimpleCommand(updatedCommand.commandName!, updatedCommand.commandResponse!, updatedCommand.commandAliases!, updatedCommand.replyInDM)
-      // this.addCommand(simpleCommand);
     }
   }
   addCommand(command: BaseCommand) {
@@ -96,61 +91,58 @@ export class TwitchManager extends ChatClient {
       this.commandAliases.set(alias, command.getName())
     });
   }
-  addSimpleCommand(command: CustomCommand) {
+  addSimpleCommand(command: TwitchCustomCommand) {
+    this.simpleCommandObjectIDs.set(command._id.toHexString(), command)
 
-    const simpleCommand = new BaseSimpleCommand(command)
-    this._simpleCommandObjectIDs.set(command._id!, { commandName: command.info.name!, channelName: command.info.channel! })
-
-    if (!this.channelCustomCommands.has(command.info.channel!)) {
-      this.logger.debug(`Creating new custom command collection for ${command.info.channel}`)
-      this.channelCustomCommands.set(command.info.channel!, new Collection<string, BaseSimpleCommand>())
-    }
     if (!this.channelCustomCommandAliases.has(command.info.channel!)) {
       this.logger.debug(`Creating new custom command alias collection for ${command.info.channel}`)
       this.channelCustomCommandAliases.set(command.info.channel!, new Collection<string, string>())
     }
 
-    const channelCommands = this.channelCustomCommands.get(command.info.channel!);
-    const channelCommandAliases = this.channelCustomCommandAliases.get(command.info.channel!);
-
-    channelCommands?.set(simpleCommand.getName(), simpleCommand);
-
-    channelCommandAliases?.set(simpleCommand.getName(), simpleCommand.getName())
-    simpleCommand.getAliases().forEach((alias: string) => {
-      channelCommandAliases?.set(alias, simpleCommand.getName())
-    });
+    if (command.alias) {
+      if (this.channelCustomCommands.has(command.alias.toHexString())) {
+        this.logger.debug(`Adding command alias: ${command.info.name}`)
+        // TODO: Should make sure to add commands without aliases first on startup 
+        this.channelCustomCommandAliases.get(command.info.channel!)?.set(command.info.name, command.alias.toHexString())
+      }
+    }
+    else if (command.response) {
+      this.logger.debug(`Adding command: ${command.info.name}`)
+      // this is the actual command, not an alias to a diff one
+      const simpleCommand = new BaseSimpleCommand(command)
+      this.channelCustomCommands.set(command._id.toHexString(), simpleCommand);
+      //be sure to set an alias for lookup later
+      this.channelCustomCommandAliases.get(command.info.channel!)?.set(command.info.name, command._id.toHexString())
+    }
   }
 
-  onSimpleCommandChange(change: ChangeEvent<any>) {
+  onSimpleCommandChange(change: ChangeEvent<TwitchCustomCommand>) {
 
     if (change.operationType === "update" || change.operationType === "delete" || change.operationType === "insert") {
-      let commandInfo: SimpleCommandInfo | undefined = undefined;
-      for (let [id, oldName] of this._simpleCommandObjectIDs.entries()) {
-        if (id?.equals(change.documentKey._id as string)) {
-          commandInfo = oldName;
-          break;
-        }
-      }
+      let oldCommand: TwitchCustomCommand | undefined = undefined;
+      let oldId = new mongoose.Types.ObjectId(change.documentKey._id.toHexString())
+      this.logger.debug(`old id: ${oldId}`);
+      oldCommand = this.simpleCommandObjectIDs.get(change.documentKey._id.toHexString())
       if (change.operationType === "delete") {
-        this.logger.debug(`Deleted a simple command: ${change.documentKey._id}`)
-        if (commandInfo) {
+        this.logger.debug(`Deleted a simple command: ${change.documentKey._id.toHexString()}`)
+        if (oldCommand) {
           this.logger.debug("Found the simple command in local array!")
-          this.commandUpdated(commandInfo, undefined)
+          this.commandUpdated(oldCommand, undefined)
         }
       }
       else if (change.operationType === "insert") {
-        this.logger.debug(`Added a simple command! ${change.documentKey._id}`)
-        if (!commandInfo) {
+        this.logger.debug(`Added a simple command! ${change.documentKey._id.toHexString()}`)
+        if (!oldCommand) {
           this.logger.debug("Didn't find the simple command in local array!")
-          this.addSimpleCommand(change.fullDocument as DocumentType<CustomCommand>)
+          this.addSimpleCommand(change.fullDocument as DocumentType<TwitchCustomCommand>)
         }
       }
       else if (change.operationType === "update") {
         this.logger.debug(`Updated a simple command!`)
-        if (commandInfo) {
+        if (oldCommand) {
           this.logger.debug("Found the added simple command in local array!")
-          this.commandUpdated(commandInfo, change.fullDocument as DocumentType<CustomCommand>)
-          // TODO should probably check all the individual changes, if they're only adding an alias or something we can just push that directly. 
+          this.commandUpdated(oldCommand, change.fullDocument as DocumentType<TwitchCustomCommand>)
+          // TODO should probably check all the individual changes and push that directly. 
         }
       }
     }
