@@ -1,6 +1,7 @@
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
+import { ChannelPermissionLevel } from "../../database/schemas/SimpleCommand";
 import { TwitchChannelConfigModel } from "../../database/schemas/TwitchChannelConfig";
-import { TwitchUserModel } from "../../database/schemas/TwitchUsers";
+import { ChoobRole, TwitchUserModel } from "../../database/schemas/TwitchUsers";
 import StateManager from "../../utils/StateManager";
 import BaseEvent from "../../utils/structures/BaseEvent";
 import { TwitchManager } from "../../utils/TwitchClientManager";
@@ -11,7 +12,6 @@ export default class MessageEvent extends BaseEvent {
 
     StateManager.on('twitchChannelConfigFetched', (config) => {
       this.logger.debug(`Fetched prefix for ${config.channelName}: \"${config.prefix}\"`)
-      //twitchChannelCommandPrefixes.set(config.channelName, config.prefix)
     })
   }
 
@@ -26,41 +26,42 @@ export default class MessageEvent extends BaseEvent {
         .trim()
         .split(/\s+/);
 
-      const command = client.tryGetCommand(targetChannel, cmdName.toLowerCase().replace(/-/g, ""));
-      //const commandName = client.commandAliases.get(cmdName.toLowerCase().replace(/-/g, ""));
-
-      // if (commandName) {
-      //   const command = client.commands.get(commandName);
+      const command = await client.tryGetCommand(msgRaw.channelId!, cmdName.toLowerCase().replace(/-/g, ""));
 
       if (command) {
-        const commandCategory = command.getCategory();
-        const commandPermissionLevel = command.getPermissionLevel();
+        const commandGeneralUserPermissionRequired = command.getCategory();
+        const commandChoobUserPermissionLevelRequired = command.getRoleRequired();
         this.logger.debug('triggered: ' + command.getName())
 
-        if (commandPermissionLevel > 0) {
+        if (commandChoobUserPermissionLevelRequired !== undefined) {
           this.logger.debug(`checking permissions for ${user}...`)
           await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
-            // this.logger.debug('Admin command check', config)
             if (twitchUserData) {
-              if (twitchUserData!.permissionLevel! >= commandPermissionLevel) {
-                this.logger.debug(`${user} has required permission level!`)
-                command.run(client, targetChannel, msgRaw, cmdArgs);
+              if (twitchUserData.roles) {
+                if (twitchUserData.roles?.includes(commandChoobUserPermissionLevelRequired) || twitchUserData.roles?.includes(ChoobRole.ADMIN)) {
+                  this.logger.debug(`${user} has required permission level!`)
+                  command.run(client, targetChannel, msgRaw, cmdArgs);
+                } else {
+                  this.logger.debug(`${user} lacked proper role`)
+                }
+              } else {
+                this.logger.debug(`${user} roles undefined`)
               }
             } else {
-              // TODO: check if they're a mod of an approved channel, and then add them to the user database?
+              this.logger.debug(`${user} was not found in the database`)
             }
           }).catch(err => this.logger.error('Error fetching permissions', err))
         } else {
-          if (commandCategory === 'channelBroadcaster') {
+          if (commandGeneralUserPermissionRequired === ChannelPermissionLevel.BROADCASTER) {
             if (msgRaw.userInfo.isBroadcaster) {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
           }
-          else if (commandCategory === 'moderator') {
+          else if (commandGeneralUserPermissionRequired === ChannelPermissionLevel.MODERATOR) {
             if (msgRaw.userInfo.isMod || msgRaw.userInfo.isBroadcaster) {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
-          } else if (commandCategory === 'choobChannelOnly') {
+          } else if (commandGeneralUserPermissionRequired === ChannelPermissionLevel.CHOOB_CHANNEL) {
             if (targetChannel === '#choob_bot') {
               command.run(client, targetChannel, msgRaw, cmdArgs);
             }
@@ -69,7 +70,6 @@ export default class MessageEvent extends BaseEvent {
           }
         }
       }
-
     }
   }
 }

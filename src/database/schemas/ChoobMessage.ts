@@ -1,4 +1,5 @@
 import { getModelForClass, index, modelOptions, mongoose, prop, queryMethod, ReturnModelType } from "@typegoose/typegoose";
+import { TimeStamps } from "@typegoose/typegoose/lib/defaultClasses";
 import { QueryMethod } from "@typegoose/typegoose/lib/types";
 
 // @modelOptions({
@@ -7,10 +8,18 @@ import { QueryMethod } from "@typegoose/typegoose/lib/types";
 //     toObject: { virtuals: true }
 //   }
 // })
-export class ChoobMessage {
+
+@modelOptions({ schemaOptions: { collection: 'choob_quotes', timestamps: true } })
+export class ChoobQuote {
   _id?: mongoose.Types.ObjectId;
+  public createdAt?: Date;
+  public updatedAt?: Date;
   @prop({ required: true, unique: true })
-  public message?: string;
+  public quote?: string;
+  @prop({ required: true })
+  public author?: string;
+  @prop({ required: true })
+  public authorId?: string;
 
 }
-export const ChoobMessageModel = getModelForClass(ChoobMessage)
+export const ChoobQuoteModel = getModelForClass(ChoobQuote)

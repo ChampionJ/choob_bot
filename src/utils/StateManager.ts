@@ -2,10 +2,10 @@ import { mongoose, DocumentType, getClass } from "@typegoose/typegoose";
 import { EventEmitter } from "events";
 import { connect, connection } from "mongoose";
 import { ChangeEvent } from "mongodb"
-import { ChoobMessage, ChoobMessageModel } from "../database/schemas/ChoobMessage";
-import { TwitchCustomCommand, TwitchCustomCommandModel } from "../database/schemas/SimpleCommand";
+import { ChoobQuote, ChoobQuoteModel } from "../database/schemas/ChoobMessage";
+import { TwitchCustomCommand, TwitchCustomCommandModel, TwitchGlobalSimpleCommand } from "../database/schemas/SimpleCommand";
 import { TwitchChannelConfig, TwitchChannelConfigModel } from '../database/schemas/TwitchChannelConfig';
-import { TwitchGiftedSubsMessage, TwitchGiftedSubsMessageModel } from "../database/schemas/TwitchGiftedSubsMessage";
+import { TwitchEventMessageGiftedSubs, TwitchEventMessageGiftedSubsModel } from "../database/schemas/TwitchGiftedSubsMessage";
 import { ChoobLogger } from "./Logging";
 
 
@@ -13,23 +13,23 @@ interface StateManager {
   on(event: 'twitchChannelConfigFetched', listener: (config: TwitchChannelConfig) => void): this;
   on(event: 'twitchChannelConfigUpdated', listener: (config: TwitchChannelConfig) => void): this;
   on(event: 'ready', listener: () => void): this;
-  on(event: 'choobFetched', listener: (choobMessage: ChoobMessage) => void): this;
+  on(event: 'choobFetched', listener: (choobMessage: ChoobQuote) => void): this;
   on(event: 'choobRemoved', listener: (index: number, removedQuote: string) => void): this;
-  on(event: 'commandUpdated', listener: (oldCommand: TwitchCustomCommand, command: TwitchCustomCommand | undefined) => void): this;
-  on(event: 'setupDatabaseManually', listener: () => void): this;
-  on(event: 'twitchGiftedSubsMessageFetched', listener: (giftedSubsMessage: TwitchGiftedSubsMessage) => void): this;
+  on(event: 'commandUpdated', listener: (oldCommand: TwitchGlobalSimpleCommand, command: TwitchGlobalSimpleCommand | undefined) => void): this;
+  on(event: 'setupDatabaseManually', listener: (data: any) => void): this;
+  on(event: 'twitchGiftedSubsMessageFetched', listener: (giftedSubsMessage: TwitchEventMessageGiftedSubs) => void): this;
   on(event: 'twitchGiftedSubsMessageRemoved', listener: (index: number, removedQuote: string) => void): this;
 }
 
 class StateManager extends EventEmitter {
   connection: import("mongoose").Connection;
   _twitchChannelConfigs: Map<string, TwitchChannelConfig>;
-  _choobs: ChoobMessage[];
-  _giftedSubQuotes: TwitchGiftedSubsMessage[];
+  _choobs: ChoobQuote[];
+  _giftedSubQuotes: TwitchEventMessageGiftedSubs[];
 
   get twitchChannelConfigs(): Map<string, TwitchChannelConfig> { return this._twitchChannelConfigs; }
-  get choobs(): ChoobMessage[] { return this._choobs; }
-  get giftedSubQuotes(): TwitchGiftedSubsMessage[] { return this._giftedSubQuotes; }
+  get choobs(): ChoobQuote[] { return this._choobs; }
+  get giftedSubQuotes(): TwitchEventMessageGiftedSubs[] { return this._giftedSubQuotes; }
 
   constructor(options: any) {
     super(options);
@@ -48,17 +48,17 @@ class StateManager extends EventEmitter {
     ChoobLogger.info(`Fetched config for ${config.channelName}`);
     this._twitchChannelConfigs.set(config.channelName!, config);
   };
-  choobFetched(choobMessage: ChoobMessage) {
-    ChoobLogger.info(`Fetched choob ${choobMessage.message}`);
+  choobFetched(choobMessage: ChoobQuote) {
+    ChoobLogger.info(`Fetched choob ${choobMessage.quote}`);
     this._choobs.push(choobMessage);
   };
-  giftedSubMessageFetched(giftedSubsMessage: TwitchGiftedSubsMessage) {
+  giftedSubMessageFetched(giftedSubsMessage: TwitchEventMessageGiftedSubs) {
     ChoobLogger.info(`Fetched choob ${giftedSubsMessage.message}`);
     this._giftedSubQuotes.push(giftedSubsMessage);
   }
 
   async setupStateFromDatabase() {
-    await ChoobMessageModel.find({}).then((choobModels) => {
+    await ChoobQuoteModel.find({}).then((choobModels) => {
       if (choobModels != null) {
         choobModels.forEach(choob => {
           this._choobs.push(choob);
@@ -66,7 +66,7 @@ class StateManager extends EventEmitter {
       }
     }).catch(err => ChoobLogger.error(err))
 
-    await TwitchGiftedSubsMessageModel.find({}).then((quoteModels) => {
+    await TwitchEventMessageGiftedSubsModel.find({}).then((quoteModels) => {
       if (quoteModels != null) {
         quoteModels.forEach(quote => {
           this._giftedSubQuotes.push(quote);
@@ -74,15 +74,15 @@ class StateManager extends EventEmitter {
       }
     }).catch(err => ChoobLogger.error(err))
 
-    ChoobMessageModel.watch().on('change', (change) => this.onChoobMessageChange(change))
+    ChoobQuoteModel.watch().on('change', (change) => this.onChoobMessageChange(change))
     TwitchChannelConfigModel.watch(undefined, { fullDocument: 'updateLookup' }).on('change', (change) => this.onTwitchChannelConfigChange(change))
-    TwitchGiftedSubsMessageModel.watch().on('change', (change) => this.onTwitchGiftedSubMessageChange(change))
+    TwitchEventMessageGiftedSubsModel.watch().on('change', (change) => this.onTwitchGiftedSubMessageChange(change))
   }
 
-  onChoobMessageChange(change: ChangeEvent<ChoobMessage>) {
+  onChoobMessageChange(change: ChangeEvent<ChoobQuote>) {
     if (change.operationType === "delete") {
       ChoobLogger.debug(`Deleted a choob: ${change.documentKey._id}`)
-      const deletedChoob = this._choobs.findIndex((choob: ChoobMessage) => choob._id?.equals(change.documentKey._id))
+      const deletedChoob = this._choobs.findIndex((choob: ChoobQuote) => choob._id?.equals(change.documentKey._id))
       if (deletedChoob >= 0) {
         ChoobLogger.debug("Found the deleted choob in local array!")
         this._choobs.splice(deletedChoob, 1);
@@ -90,19 +90,19 @@ class StateManager extends EventEmitter {
     }
     else if (change.operationType === "insert") {
       ChoobLogger.debug(`Added a choob! ${change.documentKey._id}`)
-      const insertedChoob = this._choobs.findIndex((choob: ChoobMessage) => choob._id?.equals(change.documentKey._id))
+      const insertedChoob = this._choobs.findIndex((choob: ChoobQuote) => choob._id?.equals(change.documentKey._id))
       if (insertedChoob < 0) {
         ChoobLogger.debug("Didn't find the added choob in local array!")
-        this._choobs.push(change.fullDocument as DocumentType<ChoobMessage>);
+        this._choobs.push(change.fullDocument as DocumentType<ChoobQuote>);
       }
     }
     else if (change.operationType === "update") {
       ChoobLogger.debug(`Updated a choob!`)
-      const updatedChoobIndex = this._choobs.findIndex((choob: ChoobMessage) => choob._id?.equals(change.documentKey._id))
+      const updatedChoobIndex = this._choobs.findIndex((choob: ChoobQuote) => choob._id?.equals(change.documentKey._id))
       if (updatedChoobIndex >= 0) {
         ChoobLogger.debug("Found the updated choob in local array!")
-        if (change.updateDescription.updatedFields.message !== undefined) {
-          this._choobs[updatedChoobIndex].message = change.updateDescription.updatedFields.message;
+        if (change.updateDescription.updatedFields.quote !== undefined) {
+          this._choobs[updatedChoobIndex].quote = change.updateDescription.updatedFields.quote;
         }
       }
     }
@@ -139,10 +139,10 @@ class StateManager extends EventEmitter {
     }
   }
 
-  onTwitchGiftedSubMessageChange(change: ChangeEvent<TwitchGiftedSubsMessage>) {
+  onTwitchGiftedSubMessageChange(change: ChangeEvent<TwitchEventMessageGiftedSubs>) {
     if (change.operationType === "delete") {
       ChoobLogger.debug(`Deleted a gifted sub message: ${change.documentKey._id}`)
-      const deletedMessage = this._giftedSubQuotes.findIndex((giftedMessage: TwitchGiftedSubsMessage) => giftedMessage._id?.equals(change.documentKey._id))
+      const deletedMessage = this._giftedSubQuotes.findIndex((giftedMessage: TwitchEventMessageGiftedSubs) => giftedMessage._id?.equals(change.documentKey._id))
       if (deletedMessage >= 0) {
         ChoobLogger.debug("Found the deleted gifted sub message in local array!")
         this._giftedSubQuotes.splice(deletedMessage, 1);
@@ -150,22 +150,22 @@ class StateManager extends EventEmitter {
     }
     else if (change.operationType === "insert") {
       ChoobLogger.debug(`Added a gifted sub message! ${change.documentKey._id}`)
-      const insertedMessage = this._giftedSubQuotes.findIndex((giftedMessage: TwitchGiftedSubsMessage) => giftedMessage._id?.equals(change.documentKey._id))
+      const insertedMessage = this._giftedSubQuotes.findIndex((giftedMessage: TwitchEventMessageGiftedSubs) => giftedMessage._id?.equals(change.documentKey._id))
       if (insertedMessage < 0) {
         ChoobLogger.debug("Didn't find the added gifted sub message in local array!")
-        this._giftedSubQuotes.push(change.fullDocument as DocumentType<TwitchGiftedSubsMessage>);
+        this._giftedSubQuotes.push(change.fullDocument as DocumentType<TwitchEventMessageGiftedSubs>);
       }
     }
     else if (change.operationType === "update") {
       ChoobLogger.debug(`Updated a gifted sub message!`)
-      const updatedMessageIndex = this._giftedSubQuotes.findIndex((giftedMessage: TwitchGiftedSubsMessage) => giftedMessage._id?.equals(change.documentKey._id))
+      const updatedMessageIndex = this._giftedSubQuotes.findIndex((giftedMessage: TwitchEventMessageGiftedSubs) => giftedMessage._id?.equals(change.documentKey._id))
       if (updatedMessageIndex >= 0) {
         ChoobLogger.debug("Found the updated gifted sub message in local array!")
         if (change.updateDescription.updatedFields.message !== undefined) {
           this._giftedSubQuotes[updatedMessageIndex].message = change.updateDescription.updatedFields.message;
         }
-        if (change.updateDescription.updatedFields.forMultipleGifts !== undefined) {
-          this._giftedSubQuotes[updatedMessageIndex].forMultipleGifts = change.updateDescription.updatedFields.forMultipleGifts;
+        if (change.updateDescription.updatedFields.minimumGifts !== undefined) {
+          this._giftedSubQuotes[updatedMessageIndex].minimumGifts = change.updateDescription.updatedFields.minimumGifts;
         }
       }
     }

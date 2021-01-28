@@ -3,11 +3,12 @@ import { TwitchChannelConfigModel } from '../../database/schemas/TwitchChannelCo
 import { TwitchManager } from "../../utils/TwitchClientManager";
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
+import { ChannelPermissionLevel } from '../../database/schemas/SimpleCommand';
 
 
 export default class ChangePrefixCommand extends BaseCommand {
   constructor() {
-    super('changechoobprefix', 'channelBroadcaster', 0, []);
+    super('changechoobprefix', ChannelPermissionLevel.BROADCASTER, undefined, []);
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
     this.logger.debug('Attempting to change prefix')
@@ -17,7 +18,7 @@ export default class ChangePrefixCommand extends BaseCommand {
       }).then((config) => {
         if (config != null) {
           StateManager.emit('twitchChannelConfigFetched', config)
-          client.say(targetChannel, `Updated Choob Bot prefix to: ${config.prefix}`);
+          client.sendMsg(message.channelId!, targetChannel, `Updated Choob Bot prefix to: ${config.prefix}`);
         }
       }).catch(err => this.logger.error(err))
 

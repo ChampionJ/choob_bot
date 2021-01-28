@@ -3,15 +3,16 @@ import { TwitchChannelConfigModel } from '../../database/schemas/TwitchChannelCo
 import { TwitchManager } from "../../utils/TwitchClientManager";
 import StateManager from '../../utils/StateManager';
 import BaseCommand from '../../utils/structures/BaseCommand';
+import { ChannelPermissionLevel } from '../../database/schemas/SimpleCommand';
 
 
 export default class RemoveChoobBotFromOwnChannelCommand extends BaseCommand {
   constructor() {
-    super('leavechoob', 'choobChannelOnly', 0, []);
+    super('leavechoob', ChannelPermissionLevel.CHOOB_CHANNEL, undefined, []);
   }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    //client.say(targetChannel, 'RemoveChoobBotFromChannel command works');
+    //client.sendMsg(message.channelId!, targetChannel, 'RemoveChoobBotFromChannel command works');
     this.logger.verbose(`${message.userInfo.userName} executed ${this.getName} command in ${targetChannel}`);
     let channelToLeave = "#" + message.userInfo.userName;
 
@@ -20,7 +21,7 @@ export default class RemoveChoobBotFromOwnChannelCommand extends BaseCommand {
     await TwitchChannelConfigModel.findOneAndUpdate({ channelName: channelToLeave }, { botIsInChannel: false }).then((config) => {
       if (config != null) {
         StateManager.emit('twitchChannelConfigFetched', config)
-        client.say(targetChannel, `Choob bot has left ${channelToLeave}.`);
+        client.sendMsg(message.channelId!, targetChannel, `Choob bot has left ${channelToLeave}.`);
       }
     }).catch(err => this.logger.error(err))
 

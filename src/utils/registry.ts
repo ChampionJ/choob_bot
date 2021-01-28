@@ -2,7 +2,7 @@ import path from "path";
 import { promises as fs } from 'fs';
 import { TwitchManager } from "./TwitchClientManager";
 import BaseEvent from "./structures/BaseEvent";
-import { TwitchCustomCommand, TwitchCustomCommandModel } from "../database/schemas/SimpleCommand";
+import { TwitchGlobalSimpleCommandModel } from "../database/schemas/SimpleCommand";
 import BaseSimpleCommand from "./structures/BaseSimpleCommand";
 import { ChoobLogger } from "./Logging";
 
@@ -20,15 +20,16 @@ export async function registerCommands(client: TwitchManager, dir: string = '') 
   }
 }
 export async function registerDatabaseCommands(client: TwitchManager) {
-  await TwitchCustomCommandModel.find({}).then((commandModels) => {
-    ChoobLogger.debug(`Fetched command models. Got ${commandModels.length}`)
+  //* We're only grabbing global commands that are stored in the database, as they'll be saved in-memory
+  await TwitchGlobalSimpleCommandModel.find({}).then((commandModels) => {
     if (commandModels != null) {
+      ChoobLogger.debug(`Fetched command models. Got ${commandModels.length}`)
       commandModels.forEach(commandModel => {
-        //const simpleCommand = new BaseSimpleCommand(commandModel.commandName!, commandModel.commandResponse!, commandModel.commandAliases!, commandModel.replyInDM)
         client.addSimpleCommand(commandModel);
       });
     }
   }).catch(err => client.logger.error(err, err))
+
 }
 
 export async function registerEvents(client: TwitchManager, dir: string = '') {

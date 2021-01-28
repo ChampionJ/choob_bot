@@ -1,42 +1,53 @@
-import { getModelForClass, index, mongoose, prop, queryMethod, ReturnModelType } from "@typegoose/typegoose";
+import { getModelForClass, index, modelOptions, mongoose, prop, queryMethod, ReturnModelType } from "@typegoose/typegoose";
 import BaseCommand from "../../utils/structures/BaseCommand";
 
-// export class TwitchCustomCommandInfo {
-//   @prop({ required: true })
-//   name!: string
-//   @prop({})
-//   channel!: string
-// }
-// export class TwitchCustomCommand {
-//   _id?: mongoose.Types.ObjectId;
-//   @prop({ required: true, unique: true })
-//   public info!: TwitchCustomCommandInfo;
-//   @prop({ default: [], type: [String] })
-//   public aliases?: string[];
-//   @prop({ required: true })
-//   public response!: string;
-//   @prop({ default: false })
-//   public replyInDM?: false;
-// }
-// export const CustomCommandModel = getModelForClass(TwitchCustomCommand)
+export enum ChannelPermissionLevel {
+  BROADCASTER = 'Broadcaster',
+  MODERATOR = 'Moderator',
+  VIP = 'Vip',
+  GENERAL = 'General',
+  CHOOB_CHANNEL = 'Choob'
+}
 
-export class TwitchCustomCommandInfo {
-  _id?: mongoose.Types.ObjectId;
+@modelOptions({ schemaOptions: { collection: 'custom_commands_twitch' } })
+export class TwitchCustomCommand {
+  _id!: mongoose.Types.ObjectId;
   @prop({ required: true })
   name!: string
   @prop({ required: true })
-  channel!: string
-  // TODO: maybe convert to a ObjectID that references the channel config?
-}
-export class TwitchCustomCommand {
-  _id!: mongoose.Types.ObjectId;
-  @prop({ required: true, unique: true })
-  public info!: TwitchCustomCommandInfo;
+  channelId!: string
+  @prop({ required: true })
+  channelName!: string
   @prop({})
-  public alias?: mongoose.Types.ObjectId;
+  alias?: mongoose.Types.ObjectId;
   @prop({})
-  public response?: string;
+  response?: string;
+  // @prop({ default: false })
+  // replyInDM?: false; 
   @prop({ default: false })
-  public replyInDM?: false;
+  colorResponse?: false;
+  @prop({ enum: ChannelPermissionLevel, type: String, required: true, default: ChannelPermissionLevel.GENERAL })
+  channelPermissionLevelRequired!: ChannelPermissionLevel;
 }
 export const TwitchCustomCommandModel = getModelForClass(TwitchCustomCommand)
+
+
+
+@modelOptions({ schemaOptions: { collection: 'twitch_choob_commands' } })
+export class TwitchGlobalSimpleCommand {
+  _id!: mongoose.Types.ObjectId;
+  @prop({ required: true, unique: true })
+  name!: string
+  @prop({ type: [String], default: [] })
+  aliases!: string[];
+  @prop({ enum: ChannelPermissionLevel, type: String, default: ChannelPermissionLevel.GENERAL })
+  permissionLevelRequired?: ChannelPermissionLevel;
+  @prop({ enum: ChannelPermissionLevel, type: String, required: true, default: ChannelPermissionLevel.GENERAL })
+  channelPermissionLevelRequired!: ChannelPermissionLevel;
+  @prop({ required: true })
+  response!: string;
+  @prop({ default: false })
+  colorResponse!: false;
+
+}
+export const TwitchGlobalSimpleCommandModel = getModelForClass(TwitchGlobalSimpleCommand)

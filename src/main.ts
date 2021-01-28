@@ -2,13 +2,12 @@ require('dotenv').config()
 import { Client, Message, User } from "discord.js";
 import { registerCommands, registerDatabaseCommands, registerEvents } from "./utils/registry";
 import StateManager from './utils/StateManager';
-import { AccessToken, RefreshableAuthProvider, StaticAuthProvider, TokenInfo } from 'twitch-auth';
-import { TwitchTokensModel } from "./database/schemas/TwitchTokens";
+import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
+import { APITokenModel } from "./database/schemas/TwitchTokens";
 import { TwitchChannelConfigModel } from "./database/schemas/TwitchChannelConfig";
 import { TwitchManager } from "./utils/TwitchClientManager";
 import { ChoobLogger } from "./utils/Logging";
-import BaseSimpleCommand from "./utils/structures/BaseSimpleCommand";
-import { TwitchCustomCommand, TwitchCustomCommandInfo, TwitchCustomCommandModel } from "./database/schemas/SimpleCommand";
+import { ApiClient } from 'twitch';
 
 const util = require("util");
 const Discord = require('discord.js');
@@ -44,7 +43,8 @@ async function setupTwitch() {
   const clientId = process.env.TWITCH_CLIENTID!;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET!;
   let tokenData: any;
-  tokenData = await TwitchTokensModel.findOne({});
+  const identifier = 'Choob_Bot_Twitch_API'
+  tokenData = await APITokenModel.findOne({ identifier: identifier });
 
   const auth = new RefreshableAuthProvider(
     new StaticAuthProvider(clientId, tokenData.accessToken),
@@ -58,7 +58,7 @@ async function setupTwitch() {
           refreshToken,
           expiryTimestamp: expiryDate === null ? undefined : expiryDate.getTime()
         };
-        await TwitchTokensModel.replaceOne({}, { accessToken: newTokenData.accessToken, refreshToken: newTokenData.refreshToken, expiryTimestamp: newTokenData.expiryTimestamp })
+        await APITokenModel.updateOne({ identifier: identifier }, { accessToken: newTokenData.accessToken, refreshToken: newTokenData.refreshToken, expiryTimestamp: newTokenData.expiryTimestamp })
       }
     }
   );
@@ -78,27 +78,13 @@ async function setupTwitch() {
   StateManager.on('ready', () => {
     ChoobLogger.debug('onReady')
   })
-  StateManager.on('setupDatabaseManually', async () => {
+  StateManager.on('setupDatabaseManually', async (username) => {
 
-    // let tcc: TwitchCustomCommand[] = [];
-    // await CustomCommandModel.find({}).then((commands) => {
-    //   commands.forEach(command => {
-    //     let temp = new TwitchCustomCommand();
-    //     temp.info = new TwitchCustomCommandInfo();
-    //     temp.info.channel = command.info.channel;
-    //     temp.info.name = command.info.name;
-    //     temp.response = command.response;
-    //     tcc.push(temp)
-    //   });
-    // })
-    // tcc.forEach(tc => {
-    //   TwitchCustomCommandModel.create({ info: { name: tc.info.name, channel: tc.info.channel }, response: tc.response, replyInDM: false })
-    // });
-    //TwitchCustomCommandModel.create({ info: { name: 'choobcountalias', channel: '*' }, alias: twitchManager.channelCustomCommandAliases.get('*')?.get('choobcount'), replyInDM: false })
+  });
 
-  })
   await registerCommands(twitchManager, '../commands');
   await registerDatabaseCommands(twitchManager);
   await registerEvents(twitchManager, '../events');
   await twitchManager.connect();
 }
+
