@@ -2,11 +2,11 @@ import { mongoose, DocumentType, getClass } from "@typegoose/typegoose";
 import { EventEmitter } from "events";
 import { connect, connection } from "mongoose";
 import { ChangeEvent } from "mongodb"
-import { ChoobQuote, ChoobQuoteModel } from "../database/schemas/ChoobMessage";
-import { TwitchCustomCommand, TwitchCustomCommandModel, TwitchGlobalSimpleCommand } from "../database/schemas/SimpleCommand";
-import { TwitchChannelConfig, TwitchChannelConfigModel } from '../database/schemas/TwitchChannelConfig';
-import { TwitchEventMessageGiftedSubs, TwitchEventMessageGiftedSubsModel } from "../database/schemas/TwitchGiftedSubsMessage";
-import { ChoobLogger } from "./Logging";
+import { ChoobQuote, ChoobQuoteModel } from "../structures/databaseTypes/schemas/ChoobMessage";
+import { TwitchCustomCommand, TwitchCustomCommandModel, TwitchGlobalSimpleCommand } from "../structures/databaseTypes/schemas/SimpleCommand";
+import { TwitchChannelConfig, TwitchChannelConfigModel } from '../structures/databaseTypes/schemas/TwitchChannelConfig';
+import { TwitchEventMessageGiftedSubs, TwitchEventMessageGiftedSubsModel } from "../structures/databaseTypes/schemas/TwitchGiftedSubsMessage";
+import { ChoobLogger } from "./ChoobLogger";
 
 
 interface StateManager {
@@ -19,6 +19,7 @@ interface StateManager {
   on(event: 'setupDatabaseManually', listener: (data: any) => void): this;
   on(event: 'twitchGiftedSubsMessageFetched', listener: (giftedSubsMessage: TwitchEventMessageGiftedSubs) => void): this;
   on(event: 'twitchGiftedSubsMessageRemoved', listener: (index: number, removedQuote: string) => void): this;
+  on(event: 'botInChatUpdate', listener: (channel: string, shouldJoin: boolean) => void): this;
 }
 
 class StateManager extends EventEmitter {
@@ -112,7 +113,7 @@ class StateManager extends EventEmitter {
     if (change.operationType === "delete") {
       ChoobLogger.debug(`Deleted a twitch channel config: ${change.documentKey._id}`)
       let deletedConfig = '';
-      for (let [channelName, value] of this._twitchChannelConfigs.entries()) {
+      for (const [channelName, value] of this._twitchChannelConfigs.entries()) {
         if (value._id?.equals(change.documentKey._id as string)) {
           deletedConfig = channelName;
           break;
@@ -131,10 +132,15 @@ class StateManager extends EventEmitter {
       }
     }
     else if (change.operationType === "update") {
-      ChoobLogger.debug(`Updated a channel config!`)
+      ChoobLogger.debug(`Updated a channel config!`, change.updateDescription.updatedFields)
       if (this._twitchChannelConfigs.has(change.fullDocument.channelName)) {
         ChoobLogger.debug("Found the added channel in local array!")
         this._twitchChannelConfigs.set(change.fullDocument.channelName, change.fullDocument as DocumentType<TwitchChannelConfig>);
+      }
+      ChoobLogger.debug(`About to check botisinchannel!`)
+      if (change.updateDescription.updatedFields.botIsInChannel !== undefined) {
+        ChoobLogger.debug(`Changed bot in channel!`)
+        this.emit('botInChatUpdate', change.fullDocument.channelName, change.fullDocument.botIsInChannel)
       }
     }
   }

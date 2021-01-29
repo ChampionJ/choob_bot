@@ -1,16 +1,19 @@
-require('dotenv').config()
+// require('dotenv').config()
+import dotenv from "dotenv";
+dotenv.config();
 import { Client, Message, User } from "discord.js";
 import { registerCommands, registerDatabaseCommands, registerEvents } from "./utils/registry";
 import StateManager from './utils/StateManager';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
-import { APITokenModel } from "./database/schemas/TwitchTokens";
-import { TwitchChannelConfigModel } from "./database/schemas/TwitchChannelConfig";
-import { TwitchManager } from "./utils/TwitchClientManager";
-import { ChoobLogger } from "./utils/Logging";
+import { APITokenModel } from "./structures/databaseTypes/schemas/TwitchTokens";
+import { TwitchChannelConfigModel } from "./structures/databaseTypes/schemas/TwitchChannelConfig";
+import { TwitchManager } from "./twitch/TwitchClientManager";
+import { ChoobLogger } from "./utils/ChoobLogger";
 import { ApiClient } from 'twitch';
 
-const util = require("util");
-const Discord = require('discord.js');
+// const util = require("util");
+import Discord from 'discord.js';
+
 let discordClient: Client;
 let twitchManager: TwitchManager;
 
@@ -40,11 +43,14 @@ async function setupDiscord() {
 }
 
 async function setupTwitch() {
-  const clientId = process.env.TWITCH_CLIENTID!;
+  const clientId = process.env.TWITCH_CLIENT_ID!;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET!;
-  let tokenData: any;
+  //let tokenData: any;
   const identifier = 'Choob_Bot_Twitch_API'
-  tokenData = await APITokenModel.findOne({ identifier: identifier });
+  const tokenData = await APITokenModel.findOne({ identifier: identifier });
+  if (!tokenData) {
+    return;
+  }
 
   const auth = new RefreshableAuthProvider(
     new StaticAuthProvider(clientId, tokenData.accessToken),
@@ -63,7 +69,7 @@ async function setupTwitch() {
     }
   );
 
-  let channels: string[] = [];
+  const channels: string[] = [];
   await TwitchChannelConfigModel.find({ botIsInChannel: true }).then((configs) => {
     if (configs != null) {
       configs.forEach(config => {
@@ -79,12 +85,12 @@ async function setupTwitch() {
     ChoobLogger.debug('onReady')
   })
   StateManager.on('setupDatabaseManually', async (username) => {
-
+    //test
   });
 
-  await registerCommands(twitchManager, '../commands');
+  await registerCommands(twitchManager, '../twitch/commands');
   await registerDatabaseCommands(twitchManager);
-  await registerEvents(twitchManager, '../events');
+  await registerEvents(twitchManager, '../twitch/events');
   await twitchManager.connect();
 }
 

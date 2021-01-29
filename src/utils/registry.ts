@@ -1,10 +1,9 @@
 import path from "path";
 import { promises as fs } from 'fs';
-import { TwitchManager } from "./TwitchClientManager";
-import BaseEvent from "./structures/BaseEvent";
-import { TwitchGlobalSimpleCommandModel } from "../database/schemas/SimpleCommand";
-import BaseSimpleCommand from "./structures/BaseSimpleCommand";
-import { ChoobLogger } from "./Logging";
+import { TwitchManager } from "../twitch/TwitchClientManager";
+import BaseEvent from "../structures/commands/BaseEvent";
+import { TwitchGlobalSimpleCommandModel } from "../structures/databaseTypes/schemas/SimpleCommand";
+import { ChoobLogger } from "./ChoobLogger";
 
 export async function registerCommands(client: TwitchManager, dir: string = '') {
   const filePath = path.join(__dirname, dir);
