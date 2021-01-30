@@ -18,7 +18,7 @@ export default class RemoveChoobBotFromOwnChannelCommand extends BaseCommand {
 
     client.part(channelToLeave)
 
-    await TwitchChannelConfigModel.findOneAndUpdate({ channelName: channelToLeave }, { botIsInChannel: false }).then((config) => {
+    await TwitchChannelConfigModel.findOneAndUpdate({ channelName: channelToLeave }, { botIsInChannel: false }, { useFindAndModify: false }).then((config) => {
       if (config != null) {
         StateManager.emit('twitchChannelConfigFetched', config)
         client.sendMsg(message.channelId!, targetChannel, `Choob bot has left ${channelToLeave}.`);

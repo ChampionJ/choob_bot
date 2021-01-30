@@ -9,7 +9,7 @@ export enum ChannelPermissionLevel {
   CHOOB_CHANNEL = 'Choob'
 }
 
-@modelOptions({ schemaOptions: { collection: 'custom_commands_twitch' } })
+@modelOptions({ schemaOptions: { collection: 'twitch_custom_commands' } })
 export class TwitchCustomCommand {
   _id!: mongoose.Types.ObjectId;
   @prop({ required: true })
@@ -22,8 +22,6 @@ export class TwitchCustomCommand {
   alias?: mongoose.Types.ObjectId;
   @prop({})
   response?: string;
-  // @prop({ default: false })
-  // replyInDM?: false; 
   @prop({ default: false })
   colorResponse?: false;
   @prop({ enum: ChannelPermissionLevel, type: String, required: true, default: ChannelPermissionLevel.GENERAL })

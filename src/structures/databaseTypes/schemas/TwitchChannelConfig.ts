@@ -21,6 +21,7 @@ export class TwitchChannelConfig {
   public prefix?: string;
   @prop({ required: true, default: false })
   public colorAllMessages?: boolean;
+
 }
 export const TwitchChannelConfigModel = getModelForClass(TwitchChannelConfig)
 

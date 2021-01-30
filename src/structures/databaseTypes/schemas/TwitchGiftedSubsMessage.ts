@@ -20,11 +20,3 @@ export class TwitchEventMessageGiftedSubs extends TwitchEventMessage {
 }
 export const TwitchEventMessageGiftedSubsModel = getDiscriminatorModelForClass(TwitchEventMessageModel, TwitchEventMessageGiftedSubs, TwitchEventMessageTypes.GIFTEDSUB)
 
-// export class TwitchGiftedSubsMessage {
-//   _id?: mongoose.Types.ObjectId;
-//   @prop({ required: true, unique: true })
-//   public message?: string;
-//   @prop({ required: true, default: false })
-//   public forMultipleGifts?: boolean;
-// }
-// export const TwitchGiftedSubsMessageModel = getModelForClass(TwitchGiftedSubsMessage)
