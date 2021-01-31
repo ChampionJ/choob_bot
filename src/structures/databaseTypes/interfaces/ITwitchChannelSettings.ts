@@ -1,9 +1,9 @@
-import { getDiscriminatorModelForClass } from "@typegoose/typegoose";
+import { getDiscriminatorModelForClass, mongoose } from "@typegoose/typegoose";
 
 export enum TwitchChannelSettingId {
   //* Event Messages
-  EVENT_GIFT_SUB_OPTIONS = 'twitch_channel_setting_EVENT_GIFT_SUB_OPTIONS',
-  EVENT_GIFT_SUB_LISTENING = 'twitch_channel_setting_EVENT_GIFT_SUB_LISTENING',
+  EVENT_GIFT_SUB_OPTIONS = 'tcs_event_gift_sub_options',
+  EVENT_GIFT_SUB_LISTENING = 'tcs_event_gift_sub_listening',
 
   EVENT_COMMUNITY_SUB_LISTENING = 'twitch_channel_setting_EVENT_COMMUNITY_SUB_LISTENING',
   EVENT_COMMUNITY_SUB_OPTIONS = 'twitch_channel_setting_EVENT_COMMUNITY_SUB_OPTIONS',
@@ -20,7 +20,7 @@ export enum TwitchChannelSettingId {
   EVENT_NEW_FOLLOWER_LISTENING = 'twitch_channel_setting_EVENT_NEW_FOLLOWER_LISTENING',
   EVENT_NEW_FOLLOWER_OPTIONS = 'twitch_channel_setting_EVENT_NEW_FOLLOWER_OPTIONS',
 
-  EVENT_RESUB_LISTENING = 'twitch_channel_setting_EVENT_RESUB_LISTENING',
+  EVENT_RESUB_LISTENING = 'tcs_event_resub_listening',
   EVENT_RESUB_OPTIONS = 'twitch_channel_setting_EVENT_RESUB_OPTIONS',
 
   EVENT_COMMUNITY_PAY_FORWARD_LISTENING = 'twitch_channel_setting_EVENT_COMMUNITY_PAY_FORWARD_LISTENING',
@@ -49,13 +49,47 @@ export enum TwitchChannelSettingId {
 };
 
 export enum TwitchChannelSettingCategory {
-  ADMIN = 'ADMIN',
-  CHOOB = 'CHOOB',
-  PERMISSIONS = 'PERMISSIONS',
-  GLOBAL = 'GLOBAL',
+  CHANNEL_CONFIG = 'CHANNEL_CONFIG',
+  EDITOR_PERMISSION_GROUPS = 'EDITOR_PERMISSION_GROUPS',
+  EDITORS = 'EDITORS',
   COMMANDS = 'COMMANDS',
   EVENT_MESSAGES = 'EVENT_MESSAGES',
   MISC = 'MISC'
+};
+
+export enum TwitchChannelEditorPermissions {
+  //* Channel Config
+  TOGGLE_BOT = 'TOGGLE_BOT',
+  CHANGE_PREFIX = 'CHANGE_PREFIX',
+  COLOR_ALL_RESPONSES = 'COLOR_ALL_RESPONSES',
+
+  //* Editor Permission Groups
+  VIEW_EDITOR_PERMISSION_GROUPS = 'VIEW_EDITOR_PERMISSION_GROUPS',
+  EDIT_EDITOR_PERMISSION_GROUPS = 'EDIT_EDITOR_PERMISSION_GROUPS',
+  ADD_EDITOR_PERMISSION_GROUPS = 'ADD_EDITOR_PERMISSION_GROUPS',
+  REMOVE_EDITOR_PERMISSION_GROUPS = 'REMOVE_EDITOR_PERMISSION_GROUPS',
+
+  //* Editors
+  VIEW_EDITORS = 'VIEW_EDITORS',
+  SET_PERMISSION_GROUP_FOR_ANY_EDITOR = 'SET_PERMISSION_GROUP_FOR_ANY_EDITOR',
+  ADD_EDITORS = 'ADD_EDITORS',
+  REMOVE_EDITORS = 'REMOVE_EDITORS',
+  SET_PERMISSION_GROUP_OF_LOWER_RANKED_EDITORS = 'SET_PERMISSION_GROUP_OF_LOWER_RANKED_EDITORS',
+
+  //* Commands
+  VIEW_COMMANDS = 'VIEW_COMMANDS',
+  EDIT_EXISTING_COMMANDS = 'EDIT_EXISTING_COMMANDS',
+  ADD_COMMANDS = 'ADD_COMMANDS',
+  REMOVE_COMMANDS = 'REMOVE_COMMANDS',
+
+  //! Probably not needed, since we treat aliases as full commands
+  VIEW_ALIASES = 'VIEW_ALIASES',
+  EDIT_EXISTING_ALIASES = 'EDIT_EXISTING_ALIASES',
+  ADD_ALIASES = 'ADD_ALIASES',
+  REMOVE_ALIASES = 'REMOVE_ALIASES',
+
+  //* Event Messages
+  TOGGLE_EVENT_MESSAGES = 'TOGGLE_EVENT_MESSAGES',
 };
 
 /**
@@ -70,23 +104,59 @@ export enum TwitchChannelSettingCategory {
  */
 export interface TwitchChannelSettingBaseData {
   //* Unique + Required Properties
-  settingPropertyId: TwitchChannelSettingId;
+  settingPropertyId: TwitchChannelSettingId; //this is the collection/schema
 
   //* Required Properties
   settingCategory: TwitchChannelSettingCategory;
-  permissionCategoryGroup: string;
   name: string;
   description: string;
 }
 
 export interface TwitchChannelSettingBase {
   //* Unique + Required Properties
+  _id: mongoose.Types.ObjectId;
   channelId: string;
+
+  //! Use channelId instead, this is for ease of debugging. Will be removed
+  channelName?: string;
 }
 
 
-export interface EVENT_GIFT_SUB_OPTIONS extends TwitchChannelSettingBase { }
-export interface EVENT_GIFT_SUB_LISTENING extends TwitchChannelSettingBase { }
+export interface EVENT_GIFT_SUB_OPTIONS extends TwitchChannelSettingBase {
+  //* Required Properties
+  minimumNumOfSubs: number;
+}
+export interface EVENT_GIFT_SUB_LISTENING extends TwitchChannelSettingBase {
+  //* Required Properties
+  isListening: boolean;
+}
+export interface EVENT_RESUB_LISTENING extends TwitchChannelSettingBase {
+  //* Required Properties
+  isListening: boolean;
+}
+
+export interface CHANNEL_PERMISSION_GROUPS extends TwitchChannelSettingBase {
+  //* Required Properties
+  groups: TwitchChannelPermissionGroup[]; //Handling this as an array since we care about the order
+}
+export interface TwitchChannelPermissionGroup {
+  //* Required and Unique Properties
+  _id: mongoose.Types.ObjectId;
+
+  //* Required Properties
+  name: string;
+  permissions: TwitchChannelEditorPermissions[]
+}
+
+export interface TwitchChannelEditors extends TwitchChannelSettingBase {
+  //* Required Properties
+  userId: string;
+  permissionGroup: mongoose.Types.ObjectId;
+}
+
+
+
+//* These are all un-used
 export interface EVENT_COMMUNITY_SUB_LISTENING extends TwitchChannelSettingBase { }
 export interface EVENT_COMMUNITY_SUB_OPTIONS extends TwitchChannelSettingBase { }
 export interface EVENT_ANONYMOUS_GIFT_SUB_LISTENING extends TwitchChannelSettingBase { }
@@ -97,7 +167,6 @@ export interface EVENT_JOIN_LISTENING extends TwitchChannelSettingBase { }
 export interface EVENT_JOIN_OPTIONS extends TwitchChannelSettingBase { }
 export interface EVENT_NEW_FOLLOWER_LISTENING extends TwitchChannelSettingBase { }
 export interface EVENT_NEW_FOLLOWER_OPTIONS extends TwitchChannelSettingBase { }
-export interface EVENT_RESUB_LISTENING extends TwitchChannelSettingBase { }
 export interface EVENT_RESUB_OPTIONS extends TwitchChannelSettingBase { }
 export interface EVENT_COMMUNITY_PAY_FORWARD_LISTENING extends TwitchChannelSettingBase { }
 export interface EVENT_COMMUNITY_PAY_FORWARD_OPTIONS extends TwitchChannelSettingBase { }

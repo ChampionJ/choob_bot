@@ -3,9 +3,10 @@ import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/Tw
 import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChoobRole, TwitchUser, TwitchUserModel } from '../../../structures/databaseTypes/schemas/TwitchUsers';
+import { TwitchUserModel } from '../../../structures/databaseTypes/schemas/TwitchUsers';
 import { ChoobLogger } from '../../../utils/ChoobLogger';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
+import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
 
 
 export default class AddChoobManagerCommand extends BaseCommand {

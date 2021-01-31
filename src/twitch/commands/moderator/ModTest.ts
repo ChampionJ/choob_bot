@@ -2,7 +2,7 @@
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
 import { TwitchManager } from "../../TwitchClientManager";
 import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 
 
 export default class AdminTestCommand extends BaseCommand {

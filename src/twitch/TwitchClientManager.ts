@@ -36,7 +36,8 @@ export class TwitchManager extends ChatClient {
   }
   sendMsg(channelId: string, channel: string, message: string, attributes?: ChatSayMessageAttributes) {
     // TODO check channel settings to see if should be colored
-    if (StateManager.twitchChannelConfigs.get(channelId)?.colorAllMessages) {
+    if (StateManager.twitchChannelConfigs.get(channel)?.colorAllMessages) {
+      ChoobLogger.debug(`Color all messages!`)
       this.action(channel, message);
     }
     else {

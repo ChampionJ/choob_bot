@@ -1,9 +1,9 @@
 
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
-import { ChannelPermissionLevel as ChannelPermissionLevel } from "../databaseTypes/schemas/SimpleCommand";
-import { ChoobRole } from "../databaseTypes/schemas/TwitchUsers";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import { TwitchManager } from "../../twitch/TwitchClientManager";
+import { ChannelPermissionLevel } from "../databaseTypes/interfaces/ICommand";
+import { ChoobRole } from "../databaseTypes/interfaces/IUser";
 
 export default abstract class BaseCommand {
   logger = ChoobLogger;

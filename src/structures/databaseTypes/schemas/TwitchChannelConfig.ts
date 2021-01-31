@@ -1,8 +1,9 @@
 import { getModelForClass, modelOptions, mongoose, prop } from "@typegoose/typegoose";
 import { TwitchCustomCommand } from "./SimpleCommand";
+import { ITwitchChannelConfig } from "../interfaces/ITwitchChannelConfig";
 
 @modelOptions({ schemaOptions: { collection: 'twitch_channel_configs' } })
-export class TwitchChannelConfig {
+export class TwitchChannelConfig implements ITwitchChannelConfig {
 
   //? Identity
 
@@ -10,17 +11,17 @@ export class TwitchChannelConfig {
   @prop({ required: true, unique: true })
   public identifier!: string;
   @prop({ required: true })
-  public channelName?: string;
+  public channelName!: string;
 
   //? Core Info
   @prop({ required: true, default: true })
-  public botIsInChannel?: boolean;
+  public botIsInChannel!: boolean;
 
   //? Global Settings
   @prop({ required: true, default: '!' })
-  public prefix?: string;
+  public prefix!: string;
   @prop({ required: true, default: false })
-  public colorAllMessages?: boolean;
+  public colorAllMessages!: boolean;
 
 }
 export const TwitchChannelConfigModel = getModelForClass(TwitchChannelConfig)

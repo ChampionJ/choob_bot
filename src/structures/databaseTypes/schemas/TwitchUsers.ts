@@ -1,18 +1,10 @@
 import { DocumentType, getModelForClass, mongoose, prop, modelOptions, getDiscriminatorModelForClass } from "@typegoose/typegoose";
 import { ChoobLogger } from "../../../utils/ChoobLogger";
+import { AuthType, ChoobRole, ITwitchUser, IUser } from "../interfaces/IUser";
 
 
-export enum ChoobRole {
-  ADMIN = 'ADMIN',
-  ADDCHOOB = 'Quote Creation',
-  REMOVECHOOB = 'Quote Removal'
-};
-enum AuthType {
-  TwitchUser = 'Twitch',
-  DiscordUser = 'Discord'
-}
 @modelOptions({ schemaOptions: { discriminatorKey: 'authType', collection: 'choob_users' } })
-export class User {
+export class User implements IUser {
   _id!: mongoose.Types.ObjectId;
 
   @prop({ enum: AuthType, type: String, required: true })
@@ -23,10 +15,10 @@ export class User {
   public roles!: ChoobRole[];
 
   @prop({})
-  private accessToken?: string;
+  accessToken?: string;
 
   @prop({})
-  private refreshToken?: string;
+  refreshToken?: string;
 
   async removeRolesAndSave(this: DocumentType<User>, rolesToRemove: ChoobRole[]):
     Promise<{
@@ -79,7 +71,7 @@ export class User {
 const UserSchema = getModelForClass(User)
 //export const UserSchema = SchemaFactory.createForClass(User);
 
-export class TwitchUser extends User {
+export class TwitchUser extends User implements ITwitchUser {
 
   @prop({ required: true, unique: true })
   public identifier!: string;

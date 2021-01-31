@@ -2,8 +2,8 @@
 import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
 import { TwitchManager } from "../../TwitchClientManager";
 import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChoobRole } from '../../../structures/databaseTypes/schemas/TwitchUsers';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
+import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
 
 
 export default class AddChoobBotToChannelCommand extends BaseCommand {

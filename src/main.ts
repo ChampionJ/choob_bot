@@ -10,9 +10,12 @@ import { TwitchChannelConfigModel } from "./structures/databaseTypes/schemas/Twi
 import { TwitchManager } from "./twitch/TwitchClientManager";
 import { ChoobLogger } from "./utils/ChoobLogger";
 import { ApiClient } from 'twitch';
+import { createCipheriv, randomBytes, scrypt } from 'crypto';
+import { promisify } from 'util';
 
 // const util = require("util");
 import Discord from 'discord.js';
+import { TwitchCustomCommandModel } from "./structures/databaseTypes/schemas/SimpleCommand";
 
 let discordClient: Client;
 let twitchManager: TwitchManager;
@@ -83,6 +86,12 @@ async function setupTwitch() {
 
   StateManager.on('ready', () => {
     ChoobLogger.debug('onReady')
+
+
+    // const newCom = new TwitchCustomCommandModel({ channelId: '77430906', name: 'shoutout', response: `Checkout @{arg1}'s channel! https://twitch.tv/{arg1}`, channelName: '#futureghost' })
+    // newCom.save();
+    // const newCom2 = new TwitchCustomCommandModel({ channelId: '48112322', name: 'so', response: `Checkout @{arg1}'s channel! https://twitch.tv/{arg1}`, channelName: '#lord_durok' })
+    // newCom2.save();
   })
   StateManager.on('setupDatabaseManually', async (username) => {
     //test

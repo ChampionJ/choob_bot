@@ -5,8 +5,8 @@ import { stringSimilarity } from '../../../utils/stringComparison';
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { TwitchManager } from '../../TwitchClientManager';
-import { ChoobRole } from '../../../structures/databaseTypes/schemas/TwitchUsers';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
+import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
 
 export default class AddGiftedSubMessageCommand extends BaseCommand {
   constructor() {

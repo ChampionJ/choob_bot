@@ -1,10 +1,11 @@
 import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
-import { ChannelPermissionLevel } from "../../../structures/databaseTypes/schemas/SimpleCommand";
 import { TwitchChannelConfigModel } from "../../../structures/databaseTypes/schemas/TwitchChannelConfig";
-import { ChoobRole, TwitchUserModel } from "../../../structures/databaseTypes/schemas/TwitchUsers";
+import { TwitchUserModel } from "../../../structures/databaseTypes/schemas/TwitchUsers";
 import StateManager from "../../../utils/StateManager";
 import BaseEvent from "../../../structures/commands/BaseEvent";
 import { TwitchManager } from "../../TwitchClientManager";
+import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
+import { ChoobRole } from "../../../structures/databaseTypes/interfaces/IUser";
 
 export default class MessageEvent extends BaseEvent {
   constructor() {

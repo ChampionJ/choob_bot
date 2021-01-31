@@ -3,8 +3,7 @@ import { TwitchChannelConfigModel } from '../../../structures/databaseTypes/sche
 import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
-
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 
 export default class RemoveChoobBotFromOwnChannelCommand extends BaseCommand {
   constructor() {

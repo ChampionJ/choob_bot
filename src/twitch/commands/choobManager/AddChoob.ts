@@ -5,8 +5,9 @@ import { stringSimilarity } from '../../../utils/stringComparison';
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { TwitchManager } from '../../TwitchClientManager';
-import { ChoobRole } from '../../../structures/databaseTypes/schemas/TwitchUsers';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
+import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
+import { DocumentType, mongoose } from "@typegoose/typegoose";
 
 export default class AddChoobCommand extends BaseCommand {
   constructor() {
@@ -27,11 +28,14 @@ export default class AddChoobCommand extends BaseCommand {
       }
     }
 
+
+
     const choob = new ChoobQuoteModel({ quote: newChoob, author: message.userInfo.displayName, authorId: message.userInfo.userId })
-    await choob.save().then((choobMessage: ChoobQuote) => {
-      this.logger.info(`${message.userInfo.userName} added ${choobMessage.quote} to choob collection!`)
+    await choob.save().then((choobMessage: mongoose.Document) => {
+      const choobMsg = choobMessage as DocumentType<ChoobQuote>
+      this.logger.info(`${message.userInfo.userName} added ${choobMsg.quote} to choob collection!`)
       StateManager.emit('choobFetched', choobMessage);
-      client.sendMsg(message.channelId!, targetChannel, `Added ${choobMessage.quote} to database!`)
+      client.sendMsg(message.channelId!, targetChannel, `Added ${choobMsg.quote} to database!`)
     }).catch((err) => {
       if (err.code !== 11000)
         this.logger.error(`Non-Duplicate error while adding ${newChoob} to database`, err)

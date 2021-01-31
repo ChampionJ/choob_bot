@@ -4,7 +4,7 @@ import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { TCSEventGiftSubListeningModel } from '../../../structures/databaseTypes/schemas/TwitchChannelSettings';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/schemas/SimpleCommand';
+import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 
 
 export default class ToggleSubsMessagesCommand extends BaseCommand {

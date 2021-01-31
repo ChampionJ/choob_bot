@@ -1,7 +1,7 @@
 // https://discord.js.org/#/docs/main/stable/class/Client?scrollTo=e-guildCreate
 
 import { TwitchChannelConfig, TwitchChannelConfigModel } from '../../../structures/databaseTypes/schemas/TwitchChannelConfig';
-import { TCSEventGiftSubListeningModel } from '../../../structures/databaseTypes/schemas/TwitchChannelSettings';
+import { TCSEventGiftSubListeningModel, TCSEventGiftSubOptionsModel, TCSEventResubListeningModel } from '../../../structures/databaseTypes/schemas/TwitchChannelSettings';
 import { ChoobLogger } from '../../../utils/ChoobLogger';
 import StateManager from '../../../utils/StateManager';
 import BaseEvent from '../../../structures/commands/BaseEvent';
@@ -52,12 +52,40 @@ export default class ChannelJoinEvent extends BaseEvent {
             ChoobLogger.debug(`Generated new gift sub event settings for ${user.name}: ${user.id}`)
           }
 
+          let giftOpts = await TCSEventGiftSubOptionsModel.findOneAndUpdate({ channelId: user.id }, {}, { useFindAndModify: false, upsert: true, new: true, setDefaultsOnInsert: true })
+          if (!giftOpts) {
+            giftOpts = new TCSEventGiftSubOptionsModel({ channelId: user.id })
+            await giftOpts.save();
+            ChoobLogger.debug(`Generated new gift sub event options settings for ${user.name}: ${user.id}`)
+          }
+
+          let resubListening = await TCSEventResubListeningModel.findOneAndUpdate({ channelId: user.id }, {}, { useFindAndModify: false, upsert: true, new: true, setDefaultsOnInsert: true })
+          if (!resubListening) {
+            resubListening = new TCSEventResubListeningModel({ channelId: user.id })
+            await resubListening.save();
+            ChoobLogger.debug(`Generated new gift sub event options settings for ${user.name}: ${user.id}`)
+          }
+
 
 
         }).catch((err) => {
           this.logger.error(`Wrror while creating ${channel} config in database`, err)
         })
       }
+    } else {
+
+
+
+      const user = await client.api.helix.users.getUserByName(channel.slice(1));
+
+      if (user) {
+        let gift = await TCSEventGiftSubListeningModel.findOneAndUpdate({ channelId: user.id }, {}, { useFindAndModify: false, upsert: true, new: true, setDefaultsOnInsert: true })
+        let giftOpts = await TCSEventGiftSubOptionsModel.findOneAndUpdate({ channelId: user.id }, {}, { useFindAndModify: false, upsert: true, new: true, setDefaultsOnInsert: true })
+        let resubListening = await TCSEventResubListeningModel.findOneAndUpdate({ channelId: user.id }, { isListening: false }, { useFindAndModify: false, upsert: true, new: true, setDefaultsOnInsert: true })
+
+
+      }
+
     }
 
 

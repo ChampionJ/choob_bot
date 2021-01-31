@@ -23,7 +23,7 @@ export default class ConnectedEvent extends BaseEvent {
       if (giftListenSettings?.isListening) {
 
         const giftChannelOptions = await TCSEventGiftSubOptionsModel.findOne({ channelId: userNotice.channelId })
-        if (giftChannelOptions && giftChannelOptions.minimumNumOfSubs >= subInfo.count) {
+        if (giftChannelOptions && giftChannelOptions.minimumNumOfSubs <= subInfo.count) {
 
           setTimeout(async () => {
 
