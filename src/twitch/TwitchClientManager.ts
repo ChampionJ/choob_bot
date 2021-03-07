@@ -9,7 +9,6 @@ import { TwitchCustomCommand, TwitchCustomCommandModel, TwitchGlobalSimpleComman
 import { ChatClient, ChatSayMessageAttributes } from "twitch-chat-client";
 import { mongoose, DocumentType } from "@typegoose/typegoose";
 import { ChangeEvent } from "mongodb";
-import winston from "winston";
 import { ChoobLogger } from "../utils/ChoobLogger";
 
 export class TwitchManager extends ChatClient {
@@ -23,7 +22,6 @@ export class TwitchManager extends ChatClient {
   private _channelCustomCommandAliases = new Collection<string, string>(); // all aliases : commandID
 
   private _prefix = '!';
-  logger = winston.loggers.get('main');
   api: ApiClient;
 
   constructor(authProvider: AuthProvider | undefined, options?: any | undefined) {
@@ -108,7 +106,7 @@ export class TwitchManager extends ChatClient {
   addSimpleCommand(command: TwitchGlobalSimpleCommand) {
     this.simpleCommandObjectIDs.set(command._id.toHexString(), command)
 
-    this.logger.debug(`Adding command: ${command.name}`)
+    ChoobLogger.debug(`Adding command: ${command.name}`)
     // this is the actual command, not an alias to a diff one
     const simpleCommand = new GlobalChoobCommand(command)
     this.databaseSimpleCommandsById.set(command._id.toHexString(), simpleCommand);
@@ -117,7 +115,7 @@ export class TwitchManager extends ChatClient {
 
     if (command.aliases) {
       command.aliases.forEach(alias => {
-        this.logger.debug(`Adding command alias: ${alias}`)
+        ChoobLogger.debug(`Adding command alias: ${alias}`)
         this.databaseSimpleCommandIdAliases.set(alias, command._id.toHexString())
       });
     }
