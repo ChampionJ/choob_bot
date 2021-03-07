@@ -1,4 +1,3 @@
-import { logger } from "@typegoose/typegoose/lib/logSettings";
 import { ChatCommunitySubInfo, UserNotice } from "twitch-chat-client/lib";
 import { TCSEventGiftSubListeningModel, TCSEventGiftSubOptionsModel } from "../../../structures/databaseTypes/schemas/TwitchChannelSettings";
 import { TwitchEventMessage, TwitchEventMessageGiftedSubs } from "../../../structures/databaseTypes/schemas/TwitchGiftedSubsMessage";
@@ -34,7 +33,7 @@ export default class ConnectedEvent extends BaseEvent {
             if (giftQuote) {
               client.sendMsg(userNotice.channelId!, channel, giftQuote!.message!.replace('{gifter}', username).replace('{number}', subInfo.count.toString()));
             } else {
-              logger.error(`Attempted TwitchSubGiftedSubsMessage fetch returned no results!`);
+              ChoobLogger.error(`Attempted TwitchSubGiftedSubsMessage fetch returned no results!`);
             }
           }, subInfo.count * 200 + 1000);
         }

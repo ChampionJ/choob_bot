@@ -1,26 +1,24 @@
-const winston = require('winston');
-const logger = winston.loggers.get('main');
-
-function setupLogger() {
-  winston.loggers.add('main',
-    {
-      level: 'info',
-      format: winston.format.combine(
-
-        winston.format.timestamp({
+const { createLogger, format, transports, add } = require('winston');
+// const logger = winston.loggers.get('main');
+const logger = createLogger({
+      //level: 'info',
+      format: format.combine(
+        format.timestamp({
           format: 'YYYY-MM-DD HH:mm:ss'
         }),
-        winston.format.errors({ stack: true }),
-        winston.format.splat(),
+        format.errors({ stack: true }),
+        format.splat(),
+        format.simple()
       ),
-      defaultMeta: { service: 'choob_bot' },
+      defaultMeta: { service: 'choob-bot' },
       transports: [
-        new winston.transports.File({ filename: 'logs/choob_bot-error.log', level: 'error', handleExceptions: true }),
-        new winston.transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
-        new winston.transports.File({ filename: 'logs/choob_bot-combined.log', level: 'verbose' })
+        new transports.File({ filename: 'logs/choob_bot-error.log', level: 'error', handleExceptions: true }),
+        new transports.File({ filename: 'logs/choob_bot-info.log', level: 'info' }),
+        new transports.File({ filename: 'logs/choob_bot-verbose.log', level: 'verbose'}),
       ]
     });
 
+function setupLogger() {
   const checkEmpty = (info: any): string => {
     if (Object.keys(info).length > 2) {
       return '\n' + JSON.stringify(info, (key, value) => {
@@ -32,15 +30,16 @@ function setupLogger() {
     }
     return ''
   }
+
   if (process.env.LOGGING_LEVEL != 'PRODUCTION') {
-    winston.loggers.get('main').add(new winston.transports.Console({
+    logger.add(new transports.Console({
       level: 'debug',
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.timestamp(),
-        winston.format.align(),
-        winston.format.metadata(),
-        winston.format.printf((info: any) => `${info.metadata.timestamp} ${info.level}: ${info.message} ${checkEmpty(info.metadata)}`),
+      format: format.combine(
+        format.colorize(),
+        format.timestamp(),
+        format.align(),
+        format.metadata(),
+        format.printf((info: any) => `${info.metadata.timestamp} ${info.level}: ${info.message} ${checkEmpty(info.metadata)}`),
       )
     }));
   }
