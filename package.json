@@ -1,6 +1,6 @@
 {
   "name": "choob_bot",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Twitch bot for all things choob",
   "main": "index.js",
   "scripts": {
