@@ -6,7 +6,7 @@ import BaseCommand from '../../../structures/commands/BaseCommand';
 import { TwitchEventMessageGiftedSubsModel } from '../../../structures/databaseTypes/schemas/TwitchGiftedSubsMessage';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class RemoveGiftedSubMessageCommand extends BaseCommand {
   constructor() {
