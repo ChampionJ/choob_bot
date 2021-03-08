@@ -6,7 +6,7 @@ import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class RemoveChoobCommand extends BaseCommand {
   constructor() {

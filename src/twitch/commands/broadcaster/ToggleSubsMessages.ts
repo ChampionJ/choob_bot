@@ -5,14 +5,14 @@ import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { TCSEventGiftSubListeningModel } from '../../../structures/databaseTypes/schemas/TwitchChannelSettings';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class ToggleSubsMessagesCommand extends BaseCommand {
   constructor() {
     super('togglesubscriptionchoobs', ChannelPermissionLevel.BROADCASTER, undefined, []);
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    this.logger.debug('Attempting to change setting')
+    ChoobLogger.debug('Attempting to change setting')
     if (args.length > 0) {
       if (!message.channelId) {
         return;

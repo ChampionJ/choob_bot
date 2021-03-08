@@ -14,7 +14,7 @@ export default class ChannelJoinEvent extends BaseEvent {
 
   async run(client: TwitchManager, channel: string) {
 
-    this.logger.info(`Joined ${channel}`)
+    ChoobLogger.info(`Joined ${channel}`)
 
 
 
@@ -40,7 +40,7 @@ export default class ChannelJoinEvent extends BaseEvent {
             useFindAndModify: false
           }
         ).then(async (config) => {
-          this.logger.info(`Added config for ${channel} to database`)
+          ChoobLogger.info(`Added config for ${channel} to database`)
           StateManager.emit('twitchChannelConfigFetched', config)
 
 
@@ -69,7 +69,7 @@ export default class ChannelJoinEvent extends BaseEvent {
 
 
         }).catch((err) => {
-          this.logger.error(`Wrror while creating ${channel} config in database`, err)
+          ChoobLogger.error(`Wrror while creating ${channel} config in database`, err)
         })
       }
     } else {

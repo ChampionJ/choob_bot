@@ -6,7 +6,7 @@ import { ChannelPermissionLevel } from "../databaseTypes/interfaces/ICommand";
 import { ChoobRole } from "../databaseTypes/interfaces/IUser";
 
 export default abstract class BaseCommand {
-  logger = ChoobLogger;
+
   constructor(private name: string, private channelPermissionRequired: ChannelPermissionLevel, private roleRequired: ChoobRole | undefined, private aliases: Array<string>) { }
 
   getName(): string { return this.name; }

@@ -2,7 +2,6 @@ import { ChoobLogger } from "../../utils/ChoobLogger";
 import { TwitchManager } from "../../twitch/TwitchClientManager";
 
 export default abstract class BaseEvent {
-  logger = ChoobLogger;
 
   constructor(private name: string) { }
 

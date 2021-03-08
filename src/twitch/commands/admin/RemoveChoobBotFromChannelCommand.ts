@@ -5,7 +5,7 @@ import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class RemoveChoobBotFromChannelCommand extends BaseCommand {
   constructor() {
@@ -13,7 +13,7 @@ export default class RemoveChoobBotFromChannelCommand extends BaseCommand {
   }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>): Promise<void> {
-    this.logger.verbose(`${message.userInfo.userName} executed ${this.getName} command in ${targetChannel}`);
+    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this.getName} command in ${targetChannel}`);
     args.forEach(async channelName => {
       const channelstring = "#" + channelName;
       client.part(channelstring)
@@ -23,7 +23,7 @@ export default class RemoveChoobBotFromChannelCommand extends BaseCommand {
           StateManager.emit('twitchChannelConfigFetched', config)
           client.sendMsg(message.channelId!, targetChannel, `Choob bot has left ${channelName}.`);
         }
-      }).catch(err => this.logger.error(err))
+      }).catch(err => ChoobLogger.error(err))
 
 
     });

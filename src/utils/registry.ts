@@ -40,7 +40,7 @@ export async function registerEvents(client: TwitchManager, dir: string = '') {
     if (file.endsWith('.js') || file.endsWith('.ts')) {
       const { default: Event } = await import(path.join(dir, file));
       const event: BaseEvent = new Event();
-      event.logger.info(`Initialized the ${event.getName()} event!`)
+      ChoobLogger.info(`Initialized the ${event.getName()} event!`)
       client[event.getName()](event.run.bind(event, client))
     }
   }

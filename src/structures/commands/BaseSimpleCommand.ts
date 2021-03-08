@@ -5,6 +5,7 @@ import { TwitchChannelConfigModel } from '../databaseTypes/schemas/TwitchChannel
 import StateManager from '../../utils/StateManager';
 import { TwitchManager } from '../../twitch/TwitchClientManager';
 import BaseCommand from './BaseCommand';
+import { ChoobLogger } from '../../utils/ChoobLogger';
 
 export class GlobalChoobCommand extends BaseCommand {
   responseString: string;
@@ -18,7 +19,7 @@ export class GlobalChoobCommand extends BaseCommand {
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
     const replyMessage: string = await ParseForVars(this.responseString, message, targetChannel, args)
     client.sendMsg(message.channelId!, targetChannel, replyMessage);
-    this.logger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
+    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
   }
 }
 export default class BaseSimpleCommand extends BaseCommand {
@@ -37,7 +38,7 @@ export default class BaseSimpleCommand extends BaseCommand {
     } else {
       client.sendMsg(message.channelId!, targetChannel, replyMessage);
     }
-    this.logger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
+    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
   }
 }
 

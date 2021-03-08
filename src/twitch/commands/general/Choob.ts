@@ -3,7 +3,7 @@ import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class ChoobCommand extends BaseCommand {
   constructor() {
@@ -17,9 +17,9 @@ export default class ChoobCommand extends BaseCommand {
 
     if (choobQuote) {
       client.sendMsg(message.channelId!, targetChannel, choobQuote!.quote!.replace('{user}', message.userInfo.userName));
-      this.logger.verbose(`${message.userInfo.userName} executed ${this.getName()} command in ${targetChannel}`);
+      ChoobLogger.verbose(`${message.userInfo.userName} executed ${this.getName()} command in ${targetChannel}`);
     } else {
-      this.logger.error(`Attempted ChoobMessage fetch returned no results!`);
+      ChoobLogger.error(`Attempted ChoobMessage fetch returned no results!`);
     }
   }
 }

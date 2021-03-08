@@ -3,7 +3,7 @@ import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/Tw
 import { TwitchManager } from "../../TwitchClientManager";
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class AdminTestCommand extends BaseCommand {
   constructor() {

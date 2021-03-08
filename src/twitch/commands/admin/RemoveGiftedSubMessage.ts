@@ -14,7 +14,7 @@ export default class RemoveGiftedSubMessageCommand extends BaseCommand {
   }
 
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>): Promise<void> {
-    this.logger.verbose(`${message.userInfo.userName} executed ${this.getName} command in ${targetChannel}`);
+    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this.getName} command in ${targetChannel}`);
 
     if (args.length < 1) {
       return;

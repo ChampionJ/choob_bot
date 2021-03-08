@@ -6,19 +6,19 @@ import BaseEvent from "../../../structures/commands/BaseEvent";
 import { TwitchManager } from "../../TwitchClientManager";
 import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
 import { ChoobRole } from "../../../structures/databaseTypes/interfaces/IUser";
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 export default class MessageEvent extends BaseEvent {
   constructor() {
     super('onMessage');
 
     StateManager.on('twitchChannelConfigFetched', (config) => {
-      this.logger.debug(`Fetched prefix for ${config.channelName}: "${config.prefix}"`)
+      ChoobLogger.debug(`Fetched prefix for ${config.channelName}: "${config.prefix}"`)
     })
   }
 
   async run(client: TwitchManager, targetChannel: string, user: string, message: string, msgRaw: TwitchPrivateMessage): Promise<void> {
 
-    this.logger.debug(`${targetChannel} | ${user}: ${message}`)
+    ChoobLogger.debug(`${targetChannel} | ${user}: ${message}`)
     const prefix = StateManager.twitchChannelConfigs.get(targetChannel)?.prefix || '!';
 
     if (message.startsWith(prefix)) {
@@ -32,26 +32,26 @@ export default class MessageEvent extends BaseEvent {
       if (command) {
         const commandGeneralUserPermissionRequired = command.getCategory();
         const commandChoobUserPermissionLevelRequired = command.getRoleRequired();
-        this.logger.debug('triggered: ' + command.getName())
+        ChoobLogger.debug('triggered: ' + command.getName())
 
         if (commandChoobUserPermissionLevelRequired !== undefined) {
-          this.logger.debug(`checking permissions for ${user}...`)
+          ChoobLogger.debug(`checking permissions for ${user}...`)
           await TwitchUserModel.findOne({ username: user }).then((twitchUserData) => {
             if (twitchUserData) {
               if (twitchUserData.roles) {
                 if (twitchUserData.roles?.includes(commandChoobUserPermissionLevelRequired) || twitchUserData.roles?.includes(ChoobRole.ADMIN)) {
-                  this.logger.debug(`${user} has required permission level!`)
+                  ChoobLogger.debug(`${user} has required permission level!`)
                   command.run(client, targetChannel, msgRaw, cmdArgs);
                 } else {
-                  this.logger.debug(`${user} lacked proper role`)
+                  ChoobLogger.debug(`${user} lacked proper role`)
                 }
               } else {
-                this.logger.debug(`${user} roles undefined`)
+                ChoobLogger.debug(`${user} roles undefined`)
               }
             } else {
-              this.logger.debug(`${user} was not found in the database`)
+              ChoobLogger.debug(`${user} was not found in the database`)
             }
-          }).catch(err => this.logger.error('Error fetching permissions', err))
+          }).catch(err => ChoobLogger.error('Error fetching permissions', err))
         } else {
           if (commandGeneralUserPermissionRequired === ChannelPermissionLevel.BROADCASTER) {
             if (msgRaw.userInfo.isBroadcaster) {
