@@ -4,13 +4,13 @@ import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 export default class ChangePrefixCommand extends BaseCommand {
   constructor() {
     super('changechoobprefix', ChannelPermissionLevel.BROADCASTER, undefined, []);
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    this.logger.debug('Attempting to change prefix')
+    ChoobLogger.debug('Attempting to change prefix')
     if (args.length > 0) {
       await TwitchChannelConfigModel.findOneAndUpdate({ channelName: targetChannel }, { prefix: args[0] }, {
         new: true, useFindAndModify: false
@@ -19,7 +19,7 @@ export default class ChangePrefixCommand extends BaseCommand {
           StateManager.emit('twitchChannelConfigFetched', config)
           client.sendMsg(message.channelId!, targetChannel, `Updated Choob Bot prefix to: ${config.prefix}`);
         }
-      }).catch(err => this.logger.error(err))
+      }).catch(err => ChoobLogger.error(err))
 
     }
   }

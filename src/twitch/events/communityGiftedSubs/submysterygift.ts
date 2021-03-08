@@ -13,7 +13,7 @@ export default class ConnectedEvent extends BaseEvent {
     super('onCommunitySub');
   }
   async run(client: TwitchManager, channel: string, username: string, subInfo: ChatCommunitySubInfo, userNotice: UserNotice): Promise<void> {
-    this.logger.verbose(`There were ${subInfo.count} subs gifted in ${channel} by ${username}`);
+    ChoobLogger.verbose(`There were ${subInfo.count} subs gifted in ${channel} by ${username}`);
 
     if (userNotice.channelId) {
       ChoobLogger.debug(`attempting to get settings for ${userNotice.channelId}`)

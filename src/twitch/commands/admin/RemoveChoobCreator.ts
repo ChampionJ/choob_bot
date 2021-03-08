@@ -16,7 +16,7 @@ export default class RemoveChoobManagerCommand extends BaseCommand {
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>): Promise<void> {
 
-    this.logger.debug('Triggered addchoobmanager command');
+    ChoobLogger.debug('Triggered addchoobmanager command');
     if (args.length > 0) {
       const user = await client.api.helix.users.getUserByName(args[0].toLowerCase())
         .catch((err) => {

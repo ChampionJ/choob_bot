@@ -4,7 +4,7 @@ import { TwitchManager } from "../../TwitchClientManager";
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
-
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 export default class AddChoobBotToChannelCommand extends BaseCommand {
   constructor() {
@@ -21,7 +21,7 @@ export default class AddChoobBotToChannelCommand extends BaseCommand {
         }
       ).catch(
         (reason) => {
-          this.logger.warn(`Failed to join ${channelstring}`, reason)
+          ChoobLogger.warn(`Failed to join ${channelstring}`, reason)
           client.sendMsg(message.channelId!, targetChannel, 'Failed to add Choob Bot to ' + channelName);
         }
       )

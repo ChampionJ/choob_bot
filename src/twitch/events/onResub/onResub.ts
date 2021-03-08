@@ -7,13 +7,12 @@ import BaseEvent from "../../../structures/commands/BaseEvent";
 import { TwitchManager } from "../../TwitchClientManager";
 
 
-
 export default class ConnectedEvent extends BaseEvent {
   constructor() {
     super('onResub');
   }
   async run(client: TwitchManager, channel: string, username: string, subInfo: ChatSubInfo, userNotice: UserNotice): Promise<void> {
-    this.logger.info(`${username} resubscribed to ${channel} for the ${subInfo.months} month. Also a streak:? ${subInfo.streak}`);
+    ChoobLogger.info(`${username} resubscribed to ${channel} for the ${subInfo.months} month. Also a streak:? ${subInfo.streak}`);
 
     if (userNotice.channelId) {
       ChoobLogger.debug(`attempting to get settings for ${userNotice.channelId}`)

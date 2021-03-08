@@ -53,7 +53,7 @@ export class TwitchManager extends ChatClient {
     //* Next search for any global choob bot simple commands
     const globalCommandID = this.databaseSimpleCommandIdAliases.get(command);
     if (globalCommandID) {
-      this.logger.debug(`Found global id: ${globalCommandID}`)
+      ChoobLogger.debug(`Found global id: ${globalCommandID}`)
       const res = this._channelCustomCommands.keyArray();
       return this._channelCustomCommands.get(globalCommandID);
     }
@@ -136,26 +136,26 @@ export class TwitchManager extends ChatClient {
     if (change.operationType === "update" || change.operationType === "delete" || change.operationType === "insert") {
       let oldCommand: TwitchGlobalSimpleCommand | undefined = undefined;
       const oldId = new mongoose.Types.ObjectId(change.documentKey._id.toHexString())
-      this.logger.debug(`old id: ${oldId}`);
+      ChoobLogger.debug(`old id: ${oldId}`);
       oldCommand = this.simpleCommandObjectIDs.get(change.documentKey._id.toHexString())
       if (change.operationType === "delete") {
-        this.logger.debug(`Deleted a simple command: ${change.documentKey._id.toHexString()}`)
+        ChoobLogger.debug(`Deleted a simple command: ${change.documentKey._id.toHexString()}`)
         if (oldCommand) {
-          this.logger.debug("Found the simple command in local array!")
+          ChoobLogger.debug("Found the simple command in local array!")
           this.commandUpdated(oldCommand, undefined)
         }
       }
       else if (change.operationType === "insert") {
-        this.logger.debug(`Added a simple command! ${change.documentKey._id.toHexString()}`)
+        ChoobLogger.debug(`Added a simple command! ${change.documentKey._id.toHexString()}`)
         if (!oldCommand) {
-          this.logger.debug("Didn't find the simple command in local array!")
+          ChoobLogger.debug("Didn't find the simple command in local array!")
           this.addSimpleCommand(change.fullDocument as DocumentType<TwitchGlobalSimpleCommand>)
         }
       }
       else if (change.operationType === "update") {
-        this.logger.debug(`Updated a simple command!`)
+        ChoobLogger.debug(`Updated a simple command!`)
         if (oldCommand) {
-          this.logger.debug("Found the added simple command in local array!")
+          ChoobLogger.debug("Found the added simple command in local array!")
           this.commandUpdated(oldCommand, change.fullDocument as DocumentType<TwitchGlobalSimpleCommand>)
         }
       }

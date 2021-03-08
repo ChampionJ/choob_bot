@@ -5,6 +5,7 @@ import StateManager from '../../../utils/StateManager';
 import BaseCommand from '../../../structures/commands/BaseCommand';
 import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
 import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
+import { ChoobLogger } from '../../../utils/ChoobLogger';
 
 
 export default class AdminTestCommand extends BaseCommand {
@@ -13,7 +14,7 @@ export default class AdminTestCommand extends BaseCommand {
   }
   async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>): Promise<void> {
     client.sendMsg(message.channelId!, targetChannel, 'AdminTest command works');
-    this.logger.debug('AdminTest command works');
+    ChoobLogger.debug('AdminTest command works');
     StateManager.emit('setupDatabaseManually', args[0])
   }
 }
