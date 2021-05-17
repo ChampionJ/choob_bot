@@ -44,6 +44,7 @@ export default class BaseSimpleCommand extends BaseCommand {
 
 function ParseForStaticVars(inputString: string): string {
   let outString = inputString;
+  //todo can't use this npm_package_version thing I guess
   outString = outString.replace('{choobbotversion}', process.env.npm_package_version!);
   return outString;
 }
