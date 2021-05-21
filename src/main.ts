@@ -75,33 +75,40 @@ async function setupDiscord() {
       //? 2: emoji to check
       //? 3: role ID to assign
 
-      if (cmdArgs.length < 4) {
-        const embed = new Discord.MessageEmbed()
-          .setTitle("Error: missing arguments")
-          .setColor(0xff0000)
-          .setDescription(`Command requires the following arguments:
+      if (cmdName.toLowerCase().replace(/-/g, "") === "reactionrolecheck") {
+        //TODO: Need to make sure that the user triggering the command *should* be able to do so. Likely check for a permission like manage server.
+        if (cmdArgs.length < 4) {
+          const embed = new Discord.MessageEmbed()
+            .setTitle("Error: missing arguments")
+            .setColor(0xff0000)
+            .setDescription(`Command requires the following arguments:
           <channel id> 
           <reaction role message id> 
           <emoji to check> 
           <role id to assign>`);
-        msg.channel.send(embed);
-        return;
-      }
+          msg.channel.send(embed);
+          return;
+        }
 
-      const roleToAssign = msg.guild?.roles.cache.find(
-        (role) => role.id === cmdArgs[3]
-      );
-      if (!roleToAssign) {
-        //! No role found
-        const embed = new Discord.MessageEmbed()
-          .setTitle("Error")
-          .setColor(0xff0000)
-          .setDescription(`No valid role found!`);
-        msg.channel.send(embed);
-        return;
-      }
+        const roleToAssign = msg.guild?.roles.cache.find(
+          (role) => role.id === cmdArgs[3]
+        );
+        if (!roleToAssign) {
+          //! No role found
+          const embed = new Discord.MessageEmbed()
+            .setTitle("Error")
+            .setColor(0xff0000)
+            .setDescription(`No valid role found!`);
+          msg.channel.send(embed);
+          return;
+        } else {
+          const embed = new Discord.MessageEmbed()
+            .setTitle("Starting role check...")
+            .setColor(0xff0000)
+            .setDescription(``);
+          msg.channel.send(embed);
+        }
 
-      if (cmdName.toLowerCase().replace(/-/g, "") === "reactionrolecheck") {
         let usersToCheckRoleFor = [];
         discordClient.channels.fetch(cmdArgs[0]).then((channel) => {
           let textchannel = channel as Discord.TextChannel;
@@ -131,7 +138,13 @@ async function setupDiscord() {
                 const embed = new Discord.MessageEmbed()
                   .setTitle("Results")
                   .setColor(0xff0000)
-                  .setDescription(`Set roles for ${changed} users!`);
+                  .setDescription(
+                    `Checked ${changed.total} members for ${roleToAssign.name} role:
+                    ${changed.skipped} already had the role,
+                    ${changed.successful} needed the role,
+                    ${changed.leftServer} are no longer in the server
+                    `
+                  );
                 msg.channel.send(embed);
               }
             );
@@ -149,29 +162,42 @@ async function setRoleForUsers(
 ) {
   //? We can do 50 requests per second, so let's do one batch of 20 role checks then sleep for a second. This should let us do 1200 checks per minute.
 
-  const maxPerBatch = 10;
-  let successful = 0;
+  const maxPerBatch = 20;
+  let results = {
+    successful: 0,
+    total: usersArray.length,
+    skipped: 0,
+    leftServer: 0,
+  };
+  //let successful = 0;
   for (let i = 0; i < usersArray.length; i++) {
     //guild.member(usersArray[i]);
     const member = await guild.members.fetch(usersArray[i]).catch((err) => {
       ChoobLogger.error(err);
     });
     if (member) {
-      await member.roles.add(roleToSet).catch((err) => {
-        ChoobLogger.error(err);
-      });
-      ChoobLogger.debug(`set role for ${member.displayName}`);
-      successful++;
+      if (!member.roles.cache.some((role) => role === roleToSet)) {
+        await member.roles.add(roleToSet).catch((err) => {
+          ChoobLogger.error(err);
+          results.leftServer++;
+        });
+        ChoobLogger.debug(`set role for ${member.displayName}`);
+        results.successful++;
+      } else {
+        ChoobLogger.debug(`role already held by ${member.displayName}`);
+        results.skipped++;
+      }
     } else {
       ChoobLogger.debug(`no member found for ${usersArray[i].username}`);
+      results.leftServer++;
     }
     // await guild.member(usersArray[i])?.roles.add(roleToSet);
 
     if (i % maxPerBatch == 0) {
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
-  return successful;
+  return results;
 }
 
 async function fetchAllReactions(
