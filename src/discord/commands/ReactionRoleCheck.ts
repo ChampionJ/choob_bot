@@ -1,18 +1,39 @@
-import { Message, MessageEmbed, TextChannel, Permissions } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import {
+  Message,
+  MessageEmbed,
+  TextChannel,
+  Permissions,
+  CommandInteraction,
+} from "discord.js";
 import { BaseDiscordCommand } from "../../structures/commands/BaseCommand";
 import { ChoobRole } from "../../structures/databaseTypes/interfaces/IUser";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import { fetchAllReactions, setRoleForUsers } from "../../utils/utils";
 import { DiscordManager } from "../DiscordClientManager";
-export default class TestCommand extends BaseDiscordCommand {
+export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
   constructor() {
     super(
       "reactionrolecheck",
-      Permissions.FLAGS.MANAGE_GUILD,
       undefined,
+      Permissions.FLAGS.MANAGE_GUILD,
       undefined,
       []
     );
+  }
+  getSlashCommand() {
+    return new SlashCommandBuilder()
+      .setName(this.getName())
+      .setDescription(" ");
+  }
+  async runInteraction(
+    client: DiscordManager,
+    interaction: CommandInteraction
+  ) {
+    await interaction.reply({
+      content: "There was an error while executing this command!",
+      ephemeral: true,
+    });
   }
   async run(client: DiscordManager, message: Message, args: Array<string>) {
     //? 0: channel ID

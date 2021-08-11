@@ -1,4 +1,5 @@
-import { Message, MessageEmbed } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 import { BaseDiscordCommand } from "../../structures/commands/BaseCommand";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import StateManager from "../../utils/StateManager";
@@ -7,6 +8,23 @@ import { DiscordManager } from "../DiscordClientManager";
 export default class ChoobCommand extends BaseDiscordCommand {
   constructor() {
     super("choob", undefined, undefined, undefined, []);
+  }
+  getSlashCommand() {
+    return new SlashCommandBuilder()
+      .setName(this.getName())
+      .setDescription(" ");
+  }
+  async runInteraction(
+    client: DiscordManager,
+    interaction: CommandInteraction
+  ) {
+    const choobIndexCount = StateManager.choobs.length;
+    const choobQuote =
+      StateManager.choobs[Math.floor(Math.random() * choobIndexCount)];
+    await interaction.reply({
+      content: choobQuote!.quote!.replace("{user}", interaction.user.username),
+      ephemeral: true,
+    });
   }
   async run(client: DiscordManager, message: Message, args: Array<string>) {
     const choobIndexCount = StateManager.choobs.length;

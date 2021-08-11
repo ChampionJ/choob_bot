@@ -1,4 +1,6 @@
 import { mongoose, DocumentType } from "@typegoose/typegoose";
+
+import { Routes } from "discord-api-types/v9";
 import {
   Client,
   Collection,
@@ -9,6 +11,7 @@ import {
   Role,
   User,
 } from "discord.js";
+import { REST } from "@discordjs/rest";
 import { ChangeEvent } from "mongodb";
 import { BaseDiscordCommand } from "../structures/commands/BaseCommand";
 import BaseEvent from "../structures/commands/BaseEvent";
@@ -38,7 +41,7 @@ export class DiscordManager extends Client implements IClientManager {
     DiscordGlobalChoobCommand
   >();
   private _guildCustomCommandAliases = new Collection<string, string>(); // all aliases : commandID
-
+  //private rest: REST;
   constructor() {
     super({
       intents: [
@@ -51,6 +54,8 @@ export class DiscordManager extends Client implements IClientManager {
     DiscordCustomCommandModel.watch(undefined, {
       fullDocument: "updateLookup",
     }).on("change", (change) => this.onSimpleCommandChange(change));
+
+    //this.rest = new REST({ version: "9" }).setToken(token);
   }
   get events(): Collection<string, BaseEvent> {
     return this._events;
@@ -166,7 +171,7 @@ export class DiscordManager extends Client implements IClientManager {
     }
   }
 
-  onSimpleCommandChange(change: ChangeEvent<DiscordGlobalSimpleCommand>) {
+  async onSimpleCommandChange(change: ChangeEvent<DiscordGlobalSimpleCommand>) {
     if (
       change.operationType === "update" ||
       change.operationType === "delete" ||
@@ -208,6 +213,39 @@ export class DiscordManager extends Client implements IClientManager {
           );
         }
       }
+    }
+    await this.updateRestCommands();
+  }
+  async updateRestCommands() {
+    const commands: object[] = [];
+    const rest = new REST({ version: "9" }).setToken(this.token!);
+
+    this.hardcodedCommands.each((command) =>
+      commands.push(command.getSlashCommand().toJSON())
+    );
+    this.databaseSimpleCommandsById.each((command) =>
+      commands.push(command.getSlashCommand().toJSON())
+    );
+    this._guildCustomCommands.each((command) =>
+      commands.push(command.getSlashCommand().toJSON())
+    );
+
+    try {
+      ChoobLogger.info("Started refreshing application (/) commands.");
+
+      await rest.put(
+        Routes.applicationGuildCommands(
+          process.env.DISCORD_CLIENT_ID!,
+          process.env.DISCORD_DEV_SERVER_ID!
+        ),
+        {
+          body: commands,
+        }
+      );
+
+      ChoobLogger.info("Successfully reloaded application (/) commands.");
+    } catch (error) {
+      ChoobLogger.error(error);
     }
   }
 }

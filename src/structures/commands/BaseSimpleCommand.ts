@@ -12,7 +12,14 @@ import { TwitchManager } from "../../twitch/TwitchClientManager";
 import { BaseDiscordCommand, BaseTwitchCommand } from "./BaseCommand";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import { DiscordManager } from "../../discord/DiscordClientManager";
-import { ColorResolvable, Message, MessageEmbed } from "discord.js";
+import {
+  ColorResolvable,
+  CommandInteraction,
+  Interaction,
+  Message,
+  MessageEmbed,
+} from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
 
 export class TwitchGlobalChoobCommand extends BaseTwitchCommand {
   responseString: string;
@@ -83,8 +90,8 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
   constructor(private _data: DiscordGlobalSimpleCommand) {
     super(
       _data.name!,
-      _data.guildPermissionLevelRequired,
       undefined,
+      _data.guildPermissionLevelRequired,
       undefined,
       []
     );
@@ -92,6 +99,11 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
   }
   get data(): DiscordGlobalSimpleCommand {
     return this._data;
+  }
+  getSlashCommand() {
+    return new SlashCommandBuilder()
+      .setName(this.getName())
+      .setDescription(" ");
   }
 
   async run(client: DiscordManager, message: Message, args: Array<string>) {
@@ -109,6 +121,15 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
       `${message.author.username} executed ${this._data.name} command in ${message.guild}`
     );
   }
+  async runInteraction(
+    client: DiscordManager,
+    interaction: CommandInteraction
+  ) {
+    await interaction.reply({
+      content: this.responseString,
+      ephemeral: true,
+    });
+  }
 }
 
 export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
@@ -117,8 +138,8 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
   constructor(private _data: DiscordCustomCommand) {
     super(
       _data.name!,
-      _data.guildPermissionLevelRequired,
       undefined,
+      _data.guildPermissionLevelRequired,
       _data.guildRoleIDRequired,
       []
     );
@@ -126,6 +147,22 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
   }
   get data(): DiscordCustomCommand {
     return this._data;
+  }
+
+  getSlashCommand() {
+    return new SlashCommandBuilder()
+      .setName(this.getName())
+      .setDescription(" ");
+  }
+
+  async runInteraction(
+    client: DiscordManager,
+    interaction: CommandInteraction
+  ) {
+    await interaction.reply({
+      content: this.responseString,
+      ephemeral: true,
+    });
   }
 
   async run(client: DiscordManager, message: Message, args: Array<string>) {
