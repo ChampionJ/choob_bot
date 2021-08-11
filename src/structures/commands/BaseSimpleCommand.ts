@@ -1,55 +1,205 @@
-import { mongoose } from '@typegoose/typegoose';
-import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
-import { TwitchCustomCommand, TwitchGlobalSimpleCommand } from '../databaseTypes/schemas/SimpleCommand';
-import { TwitchChannelConfigModel } from '../databaseTypes/schemas/TwitchChannelConfig';
-import StateManager from '../../utils/StateManager';
-import { TwitchManager } from '../../twitch/TwitchClientManager';
-import BaseCommand from './BaseCommand';
-import { ChoobLogger } from '../../utils/ChoobLogger';
+import { mongoose } from "@typegoose/typegoose";
+import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
+import {
+  DiscordCustomCommand,
+  DiscordGlobalSimpleCommand,
+  TwitchCustomCommand,
+  TwitchGlobalSimpleCommand,
+} from "../databaseTypes/schemas/SimpleCommand";
+import { TwitchChannelConfigModel } from "../databaseTypes/schemas/TwitchChannelConfig";
+import StateManager from "../../utils/StateManager";
+import { TwitchManager } from "../../twitch/TwitchClientManager";
+import { BaseDiscordCommand, BaseTwitchCommand } from "./BaseCommand";
+import { ChoobLogger } from "../../utils/ChoobLogger";
+import { DiscordManager } from "../../discord/DiscordClientManager";
+import { ColorResolvable, Message, MessageEmbed } from "discord.js";
 
-export class GlobalChoobCommand extends BaseCommand {
+export class TwitchGlobalChoobCommand extends BaseTwitchCommand {
   responseString: string;
 
   constructor(private _data: TwitchGlobalSimpleCommand) {
     super(_data.name!, _data.channelPermissionLevelRequired, undefined, []);
     this.responseString = ParseForStaticVars(_data.response!);
   }
-  get data(): TwitchGlobalSimpleCommand { return this._data }
+  get data(): TwitchGlobalSimpleCommand {
+    return this._data;
+  }
 
-  async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    const replyMessage: string = await ParseForVars(this.responseString, message, targetChannel, args)
-    client.sendMsg(message.channelId!, targetChannel, replyMessage);
-    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
+  async run(
+    client: TwitchManager,
+    targetChannel: string,
+    message: TwitchPrivateMessage,
+    args: Array<string>
+  ) {
+    const replyMessage: string = await ParseForTwitchVars(
+      this.responseString,
+      message,
+      message.target.value,
+      args
+    );
+    client.sendMsg(message.channelId!, message.target.value, replyMessage);
+    ChoobLogger.verbose(
+      `${message.userInfo.userName} executed ${this._data.name} command in ${message.target.value}`
+    );
   }
 }
-export default class BaseSimpleCommand extends BaseCommand {
+export class TwitchBaseSimpleCommand extends BaseTwitchCommand {
   responseString: string;
 
   constructor(private _data: TwitchCustomCommand) {
     super(_data.name!, _data.channelPermissionLevelRequired, undefined, []);
     this.responseString = ParseForStaticVars(_data.response!);
   }
-  get data(): TwitchCustomCommand { return this._data }
+  get data(): TwitchCustomCommand {
+    return this._data;
+  }
 
-  async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    const replyMessage: string = await ParseForVars(this.responseString, message, targetChannel, args)
+  async run(
+    client: TwitchManager,
+    targetChannel: string,
+    message: TwitchPrivateMessage,
+    args: Array<string>
+  ) {
+    const replyMessage: string = await ParseForTwitchVars(
+      this.responseString,
+      message,
+      message.target.value,
+      args
+    );
     if (this.data.colorResponse) {
-      client.action(targetChannel, replyMessage);
+      client.action(message.target.value, replyMessage);
     } else {
-      client.sendMsg(message.channelId!, targetChannel, replyMessage);
+      client.sendMsg(message.channelId!, message.target.value, replyMessage);
     }
-    ChoobLogger.verbose(`${message.userInfo.userName} executed ${this._data.name} command in ${targetChannel}`);
+    ChoobLogger.verbose(
+      `${message.userInfo.userName} executed ${this._data.name} command in ${message.target.value}`
+    );
+  }
+}
+
+export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
+  responseString: string;
+
+  constructor(private _data: DiscordGlobalSimpleCommand) {
+    super(
+      _data.name!,
+      _data.guildPermissionLevelRequired,
+      undefined,
+      undefined,
+      []
+    );
+    this.responseString = ParseForStaticVars(_data.response!);
+  }
+  get data(): DiscordGlobalSimpleCommand {
+    return this._data;
+  }
+
+  async run(client: DiscordManager, message: Message, args: Array<string>) {
+    const replyMessage: string = await ParseForDiscordVars(
+      this.responseString,
+      message,
+      args
+    );
+    const embed = new MessageEmbed()
+      .setColor(this.data.embedColor as ColorResolvable)
+      .setDescription(replyMessage);
+    message.channel.send({ embeds: [embed] });
+
+    ChoobLogger.verbose(
+      `${message.author.username} executed ${this._data.name} command in ${message.guild}`
+    );
+  }
+}
+
+export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
+  responseString: string;
+
+  constructor(private _data: DiscordCustomCommand) {
+    super(
+      _data.name!,
+      _data.guildPermissionLevelRequired,
+      undefined,
+      _data.guildRoleIDRequired,
+      []
+    );
+    this.responseString = ParseForStaticVars(_data.response!);
+  }
+  get data(): DiscordCustomCommand {
+    return this._data;
+  }
+
+  async run(client: DiscordManager, message: Message, args: Array<string>) {
+    const replyMessage: string = await ParseForDiscordVars(
+      this.responseString,
+      message,
+      args
+    );
+
+    const embed = new MessageEmbed()
+      .setColor(this.data.embedColor as ColorResolvable)
+      .setDescription(replyMessage);
+    message.channel.send({ embeds: [embed] });
+
+    ChoobLogger.verbose(
+      `${message.author.username} executed ${this._data.name} command in ${message.guild}`
+    );
   }
 }
 
 function ParseForStaticVars(inputString: string): string {
   let outString = inputString;
   //todo can't use this npm_package_version thing I guess
-  outString = outString.replace('{choobbotversion}', process.env.npm_package_version!);
+  outString = outString.replace(
+    "{choobbotversion}",
+    process.env.npm_package_version!
+  );
+  return outString;
+}
+async function ParseForDiscordVars(
+  responseString: string,
+  incomingMessage: Message,
+  args: string[]
+): Promise<string> {
+  let outString = responseString;
+  if (outString.match(/{.*}/g) === null) {
+    // no maches
+    return outString;
+  }
+
+  outString = await ParseForGenericVars(outString, args);
   return outString;
 }
 
-async function ParseForVars(responseString: string, rawMsgData: TwitchPrivateMessage, targetChannel: string, args: string[]): Promise<string> {
+async function ParseForGenericVars(
+  toParse: string,
+  args: string[]
+): Promise<string> {
+  let outString = toParse;
+  outString = outString.replace(
+    /\{choobquotescount\}/g,
+    StateManager.choobs.length.toString()
+  );
+
+  for (let i = 0; i < 5; i++) {
+    if (outString.includes(`{arg${i + 1}`)) {
+      if (args.length > i) {
+        const regex = new RegExp(`\{arg${i + 1}\}`, "g");
+        outString = outString.replace(regex, args[i] ?? " ");
+      } else {
+        outString = "Invalid number of arguments...";
+      }
+    }
+  }
+
+  return outString;
+}
+
+async function ParseForTwitchVars(
+  responseString: string,
+  rawMsgData: TwitchPrivateMessage,
+  targetChannel: string,
+  args: string[]
+): Promise<string> {
   let outString = responseString;
   if (outString.match(/{.*}/g) === null) {
     // no maches
@@ -57,29 +207,26 @@ async function ParseForVars(responseString: string, rawMsgData: TwitchPrivateMes
   }
   //TODO should track what placeholders are in a command when it's added to the database so we don't need to search every time
   outString = outString.replace(/\{username\}/g, rawMsgData.userInfo.userName);
-  outString = outString.replace(/\{displayname\}/g, rawMsgData.userInfo.displayName);
+  outString = outString.replace(
+    /\{displayname\}/g,
+    rawMsgData.userInfo.displayName
+  );
   outString = outString.replace(/\{channel\}/g, targetChannel.slice(1));
-  outString = outString.replace(/\{choobquotescount\}/g, StateManager.choobs.length.toString());
-  if (outString.includes('{choobchannelscount}')) {
-    let choobChannelsCount = await TwitchChannelConfigModel.countDocuments({ botIsInChannel: true });
-    outString = outString.replace(/\{choobchannelscount\}/g, choobChannelsCount.toString());
-  }
-  //TODO this can probably be some sort of algorithm
 
+  if (outString.includes("{choobchannelscount}")) {
+    let choobChannelsCount = await TwitchChannelConfigModel.countDocuments({
+      botIsInChannel: true,
+    });
+    outString = outString.replace(
+      /\{choobchannelscount\}/g,
+      choobChannelsCount.toString()
+    );
+  }
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('@')) {
+    if (args[i].startsWith("@")) {
       args[i] = args[i].slice(1);
     }
   }
-  for (let i = 0; i < 5; i++) {
-    if (outString.includes(`{arg${i + 1}`)) {
-      if (args.length > i) {
-        const regex = new RegExp(`\{arg${i + 1}\}`, 'g')
-        outString = outString.replace(regex, args[i] ?? ' ');
-      } else {
-        outString = "Invalid number of arguments..."
-      }
-    }
-  }
+  outString = await ParseForGenericVars(outString, args);
   return outString;
 }

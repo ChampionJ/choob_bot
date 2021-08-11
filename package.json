@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@typegoose/typegoose": "^7.4.2",
-    "discord.js": "^12.5.0",
+    "discord.js": "^13.0.1",
     "dotenv": "^8.2.0",
     "mongoose": "^5.10.15",
     "twitch": "^4.4.5",

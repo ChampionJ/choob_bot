@@ -1,15 +1,19 @@
-
-import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
+import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchManager } from "../../TwitchClientManager";
-import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-import { ChoobLogger } from '../../../utils/ChoobLogger';
+import { BaseTwitchCommand } from "../../../structures/commands/BaseCommand";
+import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
+import { ChoobLogger } from "../../../utils/ChoobLogger";
 
-export default class AdminTestCommand extends BaseCommand {
+export default class AdminTestCommand extends BaseTwitchCommand {
   constructor() {
-    super('modtest', ChannelPermissionLevel.MODERATOR, undefined, []);
+    super("modtest", ChannelPermissionLevel.MODERATOR, undefined, []);
   }
-  async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>) {
-    client.sendMsg(message.channelId!, targetChannel, 'Mod-test command works');
+  async run(
+    client: TwitchManager,
+    targetChannel: string,
+    message: TwitchPrivateMessage,
+    args: Array<string>
+  ) {
+    client.sendMsg(message.channelId!, targetChannel, "Mod-test command works");
   }
 }

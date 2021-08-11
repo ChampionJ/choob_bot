@@ -1,20 +1,27 @@
-
-import { TwitchPrivateMessage } from 'twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage';
+import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchManager } from "../../TwitchClientManager";
-import StateManager from '../../../utils/StateManager';
-import BaseCommand from '../../../structures/commands/BaseCommand';
-import { ChannelPermissionLevel } from '../../../structures/databaseTypes/interfaces/ICommand';
-import { ChoobRole } from '../../../structures/databaseTypes/interfaces/IUser';
-import { ChoobLogger } from '../../../utils/ChoobLogger';
+import StateManager from "../../../utils/StateManager";
+import { BaseTwitchCommand } from "../../../structures/commands/BaseCommand";
+import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
+import { ChoobRole } from "../../../structures/databaseTypes/interfaces/IUser";
+import { ChoobLogger } from "../../../utils/ChoobLogger";
 
-
-export default class AdminTestCommand extends BaseCommand {
+export default class AdminTestCommand extends BaseTwitchCommand {
   constructor() {
-    super('admintest', ChannelPermissionLevel.GENERAL, ChoobRole.ADMIN, []);
+    super("admintest", ChannelPermissionLevel.GENERAL, ChoobRole.ADMIN, []);
   }
-  async run(client: TwitchManager, targetChannel: string, message: TwitchPrivateMessage, args: Array<string>): Promise<void> {
-    client.sendMsg(message.channelId!, targetChannel, 'AdminTest command works');
-    ChoobLogger.debug('AdminTest command works');
-    StateManager.emit('setupDatabaseManually', args[0])
+  async run(
+    client: TwitchManager,
+    targetChannel: string,
+    message: TwitchPrivateMessage,
+    args: Array<string>
+  ): Promise<void> {
+    client.sendMsg(
+      message.channelId!,
+      message.target.value,
+      "AdminTest command works"
+    );
+    ChoobLogger.debug("AdminTest command works");
+    StateManager.emit("setupDatabaseManually", args[0]);
   }
 }
