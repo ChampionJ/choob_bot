@@ -11,8 +11,11 @@ export default class MessageEvent extends BaseEvent {
   }
   async run(client: DiscordManager, message: Message) {
     if (message.author.bot) return;
-    ChoobLogger.info(`Message: \n${message}`);
+    // ChoobLogger.info(`Message: \n${message}`);
 
+    return;
+
+    /*
     if (message.content.startsWith("!")) {
       const [cmdName, ...cmdArgs] = message.content
         .slice(1)
@@ -105,5 +108,6 @@ export default class MessageEvent extends BaseEvent {
         }
       }
     }
+    */
   }
 }

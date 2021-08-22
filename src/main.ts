@@ -37,7 +37,9 @@ let twitchManager: TwitchManager;
 
 async function main() {
   setupDiscord();
-  setupTwitch();
+  if (process.env.LOGGING_LEVEL !== "DEVELOPMENT") {
+    setupTwitch();
+  }
 }
 main();
 

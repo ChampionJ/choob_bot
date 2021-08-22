@@ -1,11 +1,24 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import {
+  ApplicationCommandData,
+  CommandInteraction,
+  GuildApplicationCommandPermissionData,
+  Message,
+  MessageEmbed,
+} from "discord.js";
 import { BaseDiscordCommand } from "../../structures/commands/BaseCommand";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import StateManager from "../../utils/StateManager";
 import { DiscordManager } from "../DiscordClientManager";
 
 export default class ChoobCommand extends BaseDiscordCommand {
+  async getSlashCommandPermissionsForGuild(
+    commandId: string,
+    guildId: string,
+    everyoneRoleId: string
+  ): Promise<GuildApplicationCommandPermissionData | undefined> {
+    return undefined;
+  }
   constructor() {
     super("choob", undefined, undefined, undefined, []);
   }
@@ -13,6 +26,9 @@ export default class ChoobCommand extends BaseDiscordCommand {
     return new SlashCommandBuilder()
       .setName(this.getName())
       .setDescription(" ");
+  }
+  getApplicationCommand(): ApplicationCommandData {
+    return { description: " ", name: this.getName() };
   }
   async runInteraction(
     client: DiscordManager,
@@ -23,7 +39,7 @@ export default class ChoobCommand extends BaseDiscordCommand {
       StateManager.choobs[Math.floor(Math.random() * choobIndexCount)];
     await interaction.reply({
       content: choobQuote!.quote!.replace("{user}", interaction.user.username),
-      ephemeral: true,
+      ephemeral: false,
     });
   }
   async run(client: DiscordManager, message: Message, args: Array<string>) {

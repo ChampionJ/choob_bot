@@ -13,13 +13,17 @@ import { BaseDiscordCommand, BaseTwitchCommand } from "./BaseCommand";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import { DiscordManager } from "../../discord/DiscordClientManager";
 import {
+  ApplicationCommandData,
+  ApplicationCommandPermissionData,
   ColorResolvable,
   CommandInteraction,
+  GuildApplicationCommandPermissionData,
   Interaction,
   Message,
   MessageEmbed,
 } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
+import { DGSCommandReactionRoleCheckModel } from "../databaseTypes/schemas/DiscordGuildSettings";
 
 export class TwitchGlobalChoobCommand extends BaseTwitchCommand {
   responseString: string;
@@ -105,6 +109,15 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
       .setName(this.getName())
       .setDescription(" ");
   }
+  getApplicationCommand(): ApplicationCommandData {
+    return { description: " ", name: this.getName() };
+  }
+  async getSlashCommandPermissionsForGuild(
+    commandId: string,
+    guildId: string
+  ): Promise<GuildApplicationCommandPermissionData | undefined> {
+    return undefined;
+  }
 
   async run(client: DiscordManager, message: Message, args: Array<string>) {
     const replyMessage: string = await ParseForDiscordVars(
@@ -153,6 +166,23 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
     return new SlashCommandBuilder()
       .setName(this.getName())
       .setDescription(" ");
+  }
+  getApplicationCommand(): ApplicationCommandData {
+    return { description: " ", name: this.getName() };
+  }
+  async getSlashCommandPermissionsForGuild(
+    commandId: string,
+    guildId: string
+  ): Promise<GuildApplicationCommandPermissionData | undefined> {
+    if (this.data.guildRoleIDRequired) {
+      let perms = await this.getSlashCommandPermissionsForRoles(
+        this.data.guildRoleIDRequired,
+        true
+      );
+      return { id: commandId, permissions: [...perms] };
+    }
+
+    return undefined;
   }
 
   async runInteraction(

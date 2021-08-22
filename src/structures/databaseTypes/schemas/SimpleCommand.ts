@@ -56,10 +56,10 @@ export class DiscordCustomCommand implements IDiscordCustomCommand {
   guildPermissionLevelRequired?: bigint;
   @prop({ type: [String] })
   guildRoleIDRequired?: [string];
-  @prop({})
-  alias?: mongoose.Types.ObjectId;
-  @prop({})
-  response?: string;
+  @prop({ required: true })
+  response!: string;
+  @prop({ required: true })
+  hiddenResponse!: boolean;
 }
 export const DiscordCustomCommandModel = getModelForClass(DiscordCustomCommand);
 
@@ -101,6 +101,8 @@ export class DiscordGlobalSimpleCommand implements IDiscordChoobCommand {
     required: false,
   })
   guildPermissionLevelRequired?: bigint;
+  @prop({ required: true })
+  hiddenResponse!: boolean;
 }
 export const DiscordGlobalSimpleCommandModel = getModelForClass(
   DiscordGlobalSimpleCommand

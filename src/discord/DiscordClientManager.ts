@@ -2,9 +2,12 @@ import { mongoose, DocumentType } from "@typegoose/typegoose";
 
 import { Routes } from "discord-api-types/v9";
 import {
+  ApplicationCommandData,
+  ApplicationCommandPermissionData,
   Client,
   Collection,
   Guild,
+  GuildApplicationCommandPermissionData,
   Intents,
   Message,
   MessageReaction,
@@ -16,12 +19,12 @@ import { ChangeEvent } from "mongodb";
 import { BaseDiscordCommand } from "../structures/commands/BaseCommand";
 import BaseEvent from "../structures/commands/BaseEvent";
 import {
-  TwitchGlobalChoobCommand,
   DiscordBaseSimpleCommand,
   DiscordGlobalChoobCommand,
 } from "../structures/commands/BaseSimpleCommand";
 import { IClientManager } from "../structures/databaseTypes/interfaces/IClientManager";
 import {
+  DiscordCustomCommand,
   DiscordCustomCommandModel,
   DiscordGlobalSimpleCommand,
 } from "../structures/databaseTypes/schemas/SimpleCommand";
@@ -29,18 +32,14 @@ import { ChoobLogger } from "../utils/ChoobLogger";
 
 export class DiscordManager extends Client implements IClientManager {
   private _events = new Collection<string, BaseEvent>();
-  private _hardcodedCommands = new Collection<string, BaseDiscordCommand>();
-  private _hardcodedCommandAliases = new Collection<string, string>();
-
-  private _simpleCommandObjectIDs = new Collection<
+  private _hardcodedCommandsByName = new Collection<
     string,
-    DiscordGlobalSimpleCommand
+    BaseDiscordCommand
   >();
-  private _guildCustomCommands = new Collection<
+  private _globalDatabaseCommandsByName = new Collection<
     string,
     DiscordGlobalChoobCommand
   >();
-  private _guildCustomCommandAliases = new Collection<string, string>(); // all aliases : commandID
   //private rest: REST;
   constructor() {
     super({
@@ -65,48 +64,32 @@ export class DiscordManager extends Client implements IClientManager {
     this.on(event.getName(), event.run.bind(event, this));
   }
 
-  get hardcodedCommands(): Collection<string, BaseDiscordCommand> {
-    return this._hardcodedCommands;
-  }
-  get hardcodedCommandAliases(): Collection<string, string> {
-    return this._hardcodedCommandAliases;
+  get hardcodedCommandsByName(): Collection<string, BaseDiscordCommand> {
+    return this._hardcodedCommandsByName;
   }
 
-  get simpleCommandObjectIDs(): Collection<string, DiscordGlobalSimpleCommand> {
-    return this._simpleCommandObjectIDs;
-  }
-  get databaseSimpleCommandsById(): Collection<
+  get globalDatabaseCommandsByName(): Collection<
     string,
     DiscordGlobalChoobCommand
   > {
-    return this._guildCustomCommands;
-  }
-  get databaseSimpleCommandIdAliases(): Collection<string, string> {
-    return this._guildCustomCommandAliases;
+    return this._globalDatabaseCommandsByName;
   }
 
   addCommand(command: BaseDiscordCommand) {
-    this.hardcodedCommands.set(command.getName(), command);
-    this.hardcodedCommandAliases.set(command.getName(), command.getName());
-    command.getAliases().forEach((alias: string) => {
-      //client.commands.set(alias, simpleCommand);
-      this.hardcodedCommandAliases.set(alias, command.getName());
-    });
+    this.hardcodedCommandsByName.set(command.getName(), command);
+
     ChoobLogger.info(`Added discord command: ${command.getName()}`);
   }
   async tryGetCommand(guildId: string, command: string) {
     //* Search for discord specific non-database commands
-    const builtinCommandName = this.hardcodedCommandAliases.get(command);
-    if (builtinCommandName) {
-      return this.hardcodedCommands.get(builtinCommandName);
+
+    if (this.hardcodedCommandsByName.has(command)) {
+      return this.hardcodedCommandsByName.get(command);
     }
 
     //* Next search for any global choob bot simple commands
-    const globalCommandID = this.databaseSimpleCommandIdAliases.get(command);
-    if (globalCommandID) {
-      ChoobLogger.debug(`Found global id: ${globalCommandID}`);
-      const res = [...this._guildCustomCommands.keys()];
-      return this._guildCustomCommands.get(globalCommandID);
+    if (this._globalDatabaseCommandsByName.has(command)) {
+      return this._globalDatabaseCommandsByName.get(command);
     }
 
     //* Finally search database for guild specific, custom commands
@@ -115,16 +98,6 @@ export class DiscordManager extends Client implements IClientManager {
       name: command,
     });
     if (commandFound) {
-      if (commandFound.alias) {
-        const aliasCommand = await DiscordCustomCommandModel.findById(
-          commandFound.alias
-        );
-        if (aliasCommand) {
-          commandFound = aliasCommand;
-        } else {
-          //! means there was an alias to a non-existing command
-        }
-      }
       return new DiscordBaseSimpleCommand(commandFound);
     }
     return undefined;
@@ -134,9 +107,7 @@ export class DiscordManager extends Client implements IClientManager {
     oldCommand: DiscordGlobalSimpleCommand,
     updatedCommand: DiscordGlobalSimpleCommand | undefined
   ) {
-    this.databaseSimpleCommandsById.delete(oldCommand._id.toHexString());
-    this.databaseSimpleCommandIdAliases.delete(oldCommand.name);
-    this._simpleCommandObjectIDs.delete(oldCommand._id.toHexString());
+    this.globalDatabaseCommandsByName.delete(oldCommand.name);
 
     // If we didn't delete the command entierly from the database:
     if (updatedCommand) {
@@ -145,30 +116,10 @@ export class DiscordManager extends Client implements IClientManager {
   }
 
   addSimpleCommand(command: DiscordGlobalSimpleCommand) {
-    this.simpleCommandObjectIDs.set(command._id.toHexString(), command);
-
     ChoobLogger.debug(`Adding command: ${command.name}`);
     // this is the actual command, not an alias to a diff one
     const simpleCommand = new DiscordGlobalChoobCommand(command);
-    this.databaseSimpleCommandsById.set(
-      command._id.toHexString(),
-      simpleCommand
-    );
-    //be sure to set an alias for lookup later
-    this.databaseSimpleCommandIdAliases.set(
-      command.name,
-      command._id.toHexString()
-    );
-
-    if (command.aliases) {
-      command.aliases.forEach((alias) => {
-        ChoobLogger.debug(`Adding command alias: ${alias}`);
-        this.databaseSimpleCommandIdAliases.set(
-          alias,
-          command._id.toHexString()
-        );
-      });
-    }
+    this.globalDatabaseCommandsByName.set(command.name, simpleCommand);
   }
 
   async onSimpleCommandChange(change: ChangeEvent<DiscordGlobalSimpleCommand>) {
@@ -182,9 +133,10 @@ export class DiscordManager extends Client implements IClientManager {
         change.documentKey._id.toHexString()
       );
       ChoobLogger.debug(`old id: ${oldId}`);
-      oldCommand = this.simpleCommandObjectIDs.get(
-        change.documentKey._id.toHexString()
-      );
+      oldCommand = this._globalDatabaseCommandsByName.find((value) => {
+        return value.data._id === change.documentKey._id;
+      })?.data;
+
       if (change.operationType === "delete") {
         ChoobLogger.debug(
           `Deleted a simple command: ${change.documentKey._id.toHexString()}`
@@ -217,35 +169,93 @@ export class DiscordManager extends Client implements IClientManager {
     await this.updateRestCommands();
   }
   async updateRestCommands() {
+    //! These are GLOBAL commands, and should be on every guild
     const commands: object[] = [];
+    const appCommands: ApplicationCommandData[] = [];
     const rest = new REST({ version: "9" }).setToken(this.token!);
 
-    this.hardcodedCommands.each((command) =>
+    this.hardcodedCommandsByName.each((command) =>
       commands.push(command.getSlashCommand().toJSON())
     );
-    this.databaseSimpleCommandsById.each((command) =>
-      commands.push(command.getSlashCommand().toJSON())
-    );
-    this._guildCustomCommands.each((command) =>
+    this.globalDatabaseCommandsByName.each((command) =>
       commands.push(command.getSlashCommand().toJSON())
     );
 
-    try {
-      ChoobLogger.info("Started refreshing application (/) commands.");
+    this.hardcodedCommandsByName.each((command) =>
+      appCommands.push(command.getApplicationCommand())
+    );
+    this.globalDatabaseCommandsByName.each((command) =>
+      appCommands.push(command.getApplicationCommand())
+    );
 
-      await rest.put(
-        Routes.applicationGuildCommands(
-          process.env.DISCORD_CLIENT_ID!,
-          process.env.DISCORD_DEV_SERVER_ID!
-        ),
-        {
-          body: commands,
-        }
-      );
+    ChoobLogger.info("Started refreshing application (/) commands.");
 
-      ChoobLogger.info("Successfully reloaded application (/) commands.");
-    } catch (error) {
-      ChoobLogger.error(error);
-    }
+    // await rest.put(
+    //   Routes.applicationGuildCommands(
+    //     process.env.DISCORD_CLIENT_ID!,
+    //     process.env.DISCORD_DEV_SERVER_ID!
+    //   ),
+    //   {
+    //     body: commands,
+    //   }
+    // );
+
+    await this.guilds.cache.each(async (guild) => {
+      let fetchedGlobalCommands;
+
+      guild.commands.set(appCommands).catch((err) => {
+        ChoobLogger.error(`Error setting commands in ${guild.name}: ${err}`);
+      });
+      fetchedGlobalCommands = await guild?.commands.fetch().catch((err) => {
+        ChoobLogger.error(
+          `Error fetching discord commands in ${guild.name}: ${err}`
+        );
+      });
+
+      if (fetchedGlobalCommands) {
+        ChoobLogger.debug(
+          `Fetched ${fetchedGlobalCommands.size} application commands`
+        );
+        // await this.guilds.cache.each(async (guild) => {
+        //Each Guild:
+        let fullPermissions: GuildApplicationCommandPermissionData[] = [];
+
+        fetchedGlobalCommands.each(async (value, key) => {
+          let permissions: GuildApplicationCommandPermissionData | undefined;
+          ChoobLogger.debug(
+            `Setting permissions for ${value.id} ${value.name}`
+          );
+
+          if (this.hardcodedCommandsByName.has(value.name)) {
+            const discCommand = this.hardcodedCommandsByName.get(value.name)!;
+
+            permissions = await discCommand.getSlashCommandPermissionsForGuild(
+              value.id,
+              guild.id,
+              guild.roles.everyone.id
+            );
+            ChoobLogger.debug(`hardcoded `, permissions);
+          } else if (this.globalDatabaseCommandsByName.has(value.name)) {
+            permissions = await this.globalDatabaseCommandsByName
+              .get(value.name)!
+              .getSlashCommandPermissionsForGuild(value.id, guild.id);
+            ChoobLogger.debug(`database `, permissions);
+          }
+          if (permissions !== undefined) {
+            ChoobLogger.debug(`not null`, permissions);
+            fullPermissions.push(permissions);
+          }
+          // fullPermissions.push({
+          //   id: guild.id,
+          //   permissions: [...permissions],
+          // });
+
+          // await value.permissions.set({ fullPermissions });
+          ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
+          await guild.commands.permissions.set({ fullPermissions });
+        });
+      }
+    });
+    ChoobLogger.info("Successfully reloaded application (/) commands.");
   }
 }

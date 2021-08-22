@@ -44,8 +44,8 @@ export interface IDiscordCustomCommand {
   //* Optional Properties
   guildPermissionLevelRequired?: bigint;
   guildRoleIDRequired?: [string];
-  alias?: mongoose.Types.ObjectId;
-  response?: string;
+  response: string;
+  hiddenResponse: boolean;
 }
 
 export interface IDiscordChoobCommand {
@@ -58,4 +58,5 @@ export interface IDiscordChoobCommand {
   embedColor: string;
   //* Optional Properties
   guildPermissionLevelRequired?: bigint;
+  hiddenResponse: boolean;
 }

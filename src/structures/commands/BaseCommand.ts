@@ -5,7 +5,11 @@ import { ChannelPermissionLevel } from "../databaseTypes/interfaces/ICommand";
 import { ChoobRole } from "../databaseTypes/interfaces/IUser";
 import { DiscordManager } from "../../discord/DiscordClientManager";
 import {
+  ApplicationCommand,
+  ApplicationCommandData,
+  ApplicationCommandPermissionData,
   CommandInteraction,
+  GuildApplicationCommandPermissionData,
   Interaction,
   Message,
   PermissionFlags,
@@ -70,6 +74,26 @@ export abstract class BaseDiscordCommand implements IBaseCommand {
     return this.aliases;
   }
   abstract getSlashCommand(): SlashCommandBuilder;
+  abstract getApplicationCommand(): ApplicationCommandData;
+  abstract getSlashCommandPermissionsForGuild(
+    commandId: string,
+    guildId: string,
+    everyoneRoleId: string
+  ): Promise<GuildApplicationCommandPermissionData | undefined>;
+  async getSlashCommandPermissionsForRoles(
+    roles: string[],
+    givePermission = true
+  ): Promise<ApplicationCommandPermissionData[]> {
+    let perms: ApplicationCommandPermissionData[] = [];
+    roles.forEach((role) => {
+      perms.push({
+        id: role,
+        type: "ROLE",
+        permission: givePermission,
+      });
+    });
+    return perms;
+  }
 
   abstract run(
     client: DiscordManager,
