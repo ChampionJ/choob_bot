@@ -87,7 +87,7 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
             true
           ))
         );
-        ChoobLogger.debug(`Set permission for ${role} as true`, perms);
+        ChoobLogger.debug(`Set permission for ${role} as true`);
       });
     }
 

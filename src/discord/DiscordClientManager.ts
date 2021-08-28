@@ -29,6 +29,10 @@ import {
   DiscordGlobalSimpleCommand,
 } from "../structures/databaseTypes/schemas/SimpleCommand";
 import { ChoobLogger } from "../utils/ChoobLogger";
+import {
+  DGSCommandReactionRoleCheckModel,
+  DiscordGuildSetting,
+} from "../structures/databaseTypes/schemas/DiscordGuildSettings";
 
 export class DiscordManager extends Client implements IClientManager {
   private _events = new Collection<string, BaseEvent>();
@@ -53,6 +57,13 @@ export class DiscordManager extends Client implements IClientManager {
     DiscordCustomCommandModel.watch(undefined, {
       fullDocument: "updateLookup",
     }).on("change", (change) => this.onSimpleCommandChange(change));
+
+    DGSCommandReactionRoleCheckModel.watch(undefined, {
+      fullDocument: "updateLookup",
+    }).on(
+      "change",
+      async (change) => await this.onDiscordGuildSettingChange(change)
+    );
 
     //this.rest = new REST({ version: "9" }).setToken(token);
   }
@@ -168,93 +179,98 @@ export class DiscordManager extends Client implements IClientManager {
     }
     await this.updateRestCommands();
   }
+  async onDiscordGuildSettingChange(change: ChangeEvent<DiscordGuildSetting>) {
+    ChoobLogger.debug(`Discord Guild Setting Change!`);
+    if (change.operationType === "delete") {
+      ChoobLogger.debug(
+        `Deleted a discord guild setting: ${change.documentKey._id}`
+      );
+    } else if (change.operationType === "insert") {
+      if (change.fullDocument?.guildId) {
+        ChoobLogger.debug(`Found guild, from inserted document`);
+        await this.updateRestCommandsForGuild(change.fullDocument.guildId);
+      }
+    } else if (change.operationType === "update") {
+      if (change.fullDocument?.guildId) {
+        ChoobLogger.debug(`Found guild, from updated document`);
+        await this.updateRestCommandsForGuild(change.fullDocument.guildId);
+      }
+    }
+  }
+  async updateRestCommandsForGuild(guildId: string) {
+    const appCommands: ApplicationCommandData[] = this.getAllAppCommandsData();
+    const guild = await this.guilds.fetch(guildId);
+    if (guild) {
+      ChoobLogger.debug(`Found guild, attempting to set rest commands`);
+      await this.updateGuildRestCommands(guild, appCommands);
+    }
+  }
+  getAllAppCommandsData(): ApplicationCommandData[] {
+    const appCommands: ApplicationCommandData[] = [];
+
+    this.hardcodedCommandsByName.each((command) =>
+      appCommands.push(command.getApplicationCommand())
+    );
+    this.globalDatabaseCommandsByName.each((command) =>
+      appCommands.push(command.getApplicationCommand())
+    );
+    ChoobLogger.debug(`Collected all application command data`);
+    return appCommands;
+  }
+  async updateGuildRestCommands(
+    guild: Guild,
+    appCommands: ApplicationCommandData[]
+  ) {
+    let fetchedGlobalCommands;
+
+    guild.commands.set(appCommands).catch((err) => {
+      ChoobLogger.error(`Error setting commands in ${guild.name}: ${err}`);
+    });
+    fetchedGlobalCommands = await guild?.commands.fetch().catch((err) => {
+      ChoobLogger.error(
+        `Error fetching discord commands in ${guild.name}: ${err}`
+      );
+    });
+
+    if (fetchedGlobalCommands) {
+      ChoobLogger.debug(
+        `Fetched ${fetchedGlobalCommands.size} application commands`
+      );
+      let fullPermissions: GuildApplicationCommandPermissionData[] = [];
+      fetchedGlobalCommands.each(async (value, key) => {
+        let permissions: GuildApplicationCommandPermissionData | undefined;
+        ChoobLogger.debug(`Setting permissions for ${value.id} ${value.name}`);
+        if (this.hardcodedCommandsByName.has(value.name)) {
+          const discCommand = this.hardcodedCommandsByName.get(value.name)!;
+          permissions = await discCommand.getSlashCommandPermissionsForGuild(
+            value.id,
+            guild.id,
+            guild.roles.everyone.id
+          );
+          // ChoobLogger.debug(`hardcoded `, permissions);
+        } else if (this.globalDatabaseCommandsByName.has(value.name)) {
+          permissions = await this.globalDatabaseCommandsByName
+            .get(value.name)!
+            .getSlashCommandPermissionsForGuild(value.id, guild.id);
+          // ChoobLogger.debug(`database `, permissions);
+        }
+        if (permissions !== undefined) {
+          ChoobLogger.debug(`not null`, permissions);
+          // fullPermissions.push(permissions);
+        }
+        // ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
+        await guild.commands.permissions.set({ fullPermissions });
+      });
+    }
+  }
   async updateRestCommands() {
     //! These are GLOBAL commands, and should be on every guild
-    const commands: object[] = [];
-    const appCommands: ApplicationCommandData[] = [];
-    const rest = new REST({ version: "9" }).setToken(this.token!);
 
-    this.hardcodedCommandsByName.each((command) =>
-      commands.push(command.getSlashCommand().toJSON())
-    );
-    this.globalDatabaseCommandsByName.each((command) =>
-      commands.push(command.getSlashCommand().toJSON())
-    );
-
-    this.hardcodedCommandsByName.each((command) =>
-      appCommands.push(command.getApplicationCommand())
-    );
-    this.globalDatabaseCommandsByName.each((command) =>
-      appCommands.push(command.getApplicationCommand())
-    );
-
+    const appCommands: ApplicationCommandData[] = this.getAllAppCommandsData();
     ChoobLogger.info("Started refreshing application (/) commands.");
 
-    // await rest.put(
-    //   Routes.applicationGuildCommands(
-    //     process.env.DISCORD_CLIENT_ID!,
-    //     process.env.DISCORD_DEV_SERVER_ID!
-    //   ),
-    //   {
-    //     body: commands,
-    //   }
-    // );
-
     await this.guilds.cache.each(async (guild) => {
-      let fetchedGlobalCommands;
-
-      guild.commands.set(appCommands).catch((err) => {
-        ChoobLogger.error(`Error setting commands in ${guild.name}: ${err}`);
-      });
-      fetchedGlobalCommands = await guild?.commands.fetch().catch((err) => {
-        ChoobLogger.error(
-          `Error fetching discord commands in ${guild.name}: ${err}`
-        );
-      });
-
-      if (fetchedGlobalCommands) {
-        ChoobLogger.debug(
-          `Fetched ${fetchedGlobalCommands.size} application commands`
-        );
-        // await this.guilds.cache.each(async (guild) => {
-        //Each Guild:
-        let fullPermissions: GuildApplicationCommandPermissionData[] = [];
-
-        fetchedGlobalCommands.each(async (value, key) => {
-          let permissions: GuildApplicationCommandPermissionData | undefined;
-          ChoobLogger.debug(
-            `Setting permissions for ${value.id} ${value.name}`
-          );
-
-          if (this.hardcodedCommandsByName.has(value.name)) {
-            const discCommand = this.hardcodedCommandsByName.get(value.name)!;
-
-            permissions = await discCommand.getSlashCommandPermissionsForGuild(
-              value.id,
-              guild.id,
-              guild.roles.everyone.id
-            );
-            ChoobLogger.debug(`hardcoded `, permissions);
-          } else if (this.globalDatabaseCommandsByName.has(value.name)) {
-            permissions = await this.globalDatabaseCommandsByName
-              .get(value.name)!
-              .getSlashCommandPermissionsForGuild(value.id, guild.id);
-            ChoobLogger.debug(`database `, permissions);
-          }
-          if (permissions !== undefined) {
-            ChoobLogger.debug(`not null`, permissions);
-            fullPermissions.push(permissions);
-          }
-          // fullPermissions.push({
-          //   id: guild.id,
-          //   permissions: [...permissions],
-          // });
-
-          // await value.permissions.set({ fullPermissions });
-          ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
-          await guild.commands.permissions.set({ fullPermissions });
-        });
-      }
+      await this.updateGuildRestCommands(guild, appCommands);
     });
     ChoobLogger.info("Successfully reloaded application (/) commands.");
   }
