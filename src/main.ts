@@ -54,7 +54,7 @@ async function setupDiscord() {
   await registerEvents(discordClient, "../discord/events");
 
   await discordClient.login(process.env.DISCORD_TOKEN);
-  await discordClient.updateRestCommands();
+  //await discordClient.updateRestCommands();
 
   // discordClient.on("ready", () => {
   //   ChoobLogger.info(

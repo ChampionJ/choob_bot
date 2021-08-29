@@ -40,7 +40,7 @@ export default class ReadyEvent extends BaseEvent {
         )
           .then(async (config) => {
             ChoobLogger.info(
-              `Added config for ${config.guildName} to database`
+              `Updated config for ${config.guildName} in database`
             );
             StateManager.emit("discordGuildConfigFetched", config);
           })
@@ -54,5 +54,6 @@ export default class ReadyEvent extends BaseEvent {
         //grab event settings to listen to?
       }
     });
+    await client.updateRestCommands();
   }
 }

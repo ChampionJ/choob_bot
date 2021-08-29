@@ -177,6 +177,7 @@ export class DiscordManager extends Client implements IClientManager {
         }
       }
     }
+    ChoobLogger.info(`Updated simple command, updating rest api now`);
     await this.updateRestCommands();
   }
   async onDiscordGuildSettingChange(change: ChangeEvent<DiscordGuildSetting>) {
@@ -223,7 +224,7 @@ export class DiscordManager extends Client implements IClientManager {
   ) {
     let fetchedGlobalCommands;
 
-    guild.commands.set(appCommands).catch((err) => {
+    await guild.commands.set(appCommands).catch((err) => {
       ChoobLogger.error(`Error setting commands in ${guild.name}: ${err}`);
     });
     fetchedGlobalCommands = await guild?.commands.fetch().catch((err) => {
@@ -255,21 +256,38 @@ export class DiscordManager extends Client implements IClientManager {
           // ChoobLogger.debug(`database `, permissions);
         }
         if (permissions !== undefined) {
-          ChoobLogger.debug(`not null`, permissions);
-          // fullPermissions.push(permissions);
+          //ChoobLogger.debug(`not null`, permissions);
+          fullPermissions.push(permissions);
         }
         // ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
-        await guild.commands.permissions.set({ fullPermissions });
+        await guild.commands.permissions
+          .set({ fullPermissions })
+          .then(() =>
+            ChoobLogger.info(
+              `Set guild command permission for command: "${value.name}" in guild: ${guild.id}`
+            )
+          )
+          .catch((err) =>
+            ChoobLogger.error(
+              `Failed to set guild command permissions for command: "${value.name}" in guild: ${guild.id}`,
+              err
+            )
+          );
       });
     }
   }
   async updateRestCommands() {
     //! These are GLOBAL commands, and should be on every guild
 
-    const appCommands: ApplicationCommandData[] = this.getAllAppCommandsData();
+    const appCommands: ApplicationCommandData[] =
+      await this.getAllAppCommandsData();
     ChoobLogger.info("Started refreshing application (/) commands.");
+    ChoobLogger.info(`Cached guilds: ${this.guilds.cache.size}`);
 
     await this.guilds.cache.each(async (guild) => {
+      ChoobLogger.info(
+        `Beginning to update guild commands for id: ${guild.id}`
+      );
       await this.updateGuildRestCommands(guild, appCommands);
     });
     ChoobLogger.info("Successfully reloaded application (/) commands.");
