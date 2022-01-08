@@ -1,6 +1,6 @@
 import { Collection } from "discord.js";
-import { AuthProvider } from "twitch/lib";
-import { ApiClient } from "twitch";
+import { AuthProvider } from "@twurple/auth";
+import { ApiClient } from "@twurple/api";
 import StateManager from "../utils/StateManager";
 import { BaseTwitchCommand } from "../structures/commands/BaseCommand";
 import { EventHandlerList } from "ircv3/lib/IrcClient";
@@ -14,7 +14,11 @@ import {
   TwitchGlobalSimpleCommand,
   TwitchGlobalSimpleCommandModel,
 } from "../structures/databaseTypes/schemas/SimpleCommand";
-import { ChatClient, ChatSayMessageAttributes } from "twitch-chat-client";
+import {
+  ChatClient,
+  ChatClientOptions,
+  ChatSayMessageAttributes,
+} from "@twurple/chat";
 import { mongoose, DocumentType } from "@typegoose/typegoose";
 import { ChangeEvent } from "mongodb";
 import { ChoobLogger } from "../utils/ChoobLogger";
@@ -40,12 +44,11 @@ export class TwitchManager extends ChatClient implements IClientManager {
   private _prefix = "!";
   api: ApiClient;
 
-  constructor(
-    authProvider: AuthProvider | undefined,
-    options?: any | undefined
-  ) {
-    super(authProvider, options);
-    this.api = new ApiClient({ authProvider: authProvider });
+  constructor(options: ChatClientOptions) {
+    super(options);
+    const authProvider = options.authProvider!;
+    this.api = new ApiClient({ authProvider });
+
     StateManager.on("commandUpdated", this.commandUpdated);
     StateManager.on("botInChatUpdate", (name, join) => {
       this.onBotInChatUpdate(name, join);

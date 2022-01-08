@@ -1,8 +1,13 @@
-import { getModelForClass, modelOptions, mongoose, prop } from "@typegoose/typegoose";
+import {
+  getModelForClass,
+  modelOptions,
+  mongoose,
+  prop,
+} from "@typegoose/typegoose";
 
-import { ITwitchToken, IAPIToken } from "../interfaces/IAPIToken"
+import { ITwitchToken, IAPIToken } from "../interfaces/IAPIToken";
 
-@modelOptions({ schemaOptions: { collection: 'api_tokens' } })
+@modelOptions({ schemaOptions: { collection: "api_tokens" } })
 export class APIToken implements IAPIToken {
   _id!: mongoose.Types.ObjectId;
   @prop({ type: String, required: true, unique: true })
@@ -13,8 +18,12 @@ export class APIToken implements IAPIToken {
   public refreshToken!: string;
   @prop({ required: true })
   public expiryTimestamp!: number;
+  @prop({ required: true })
+  public expiresIn!: number;
+  @prop({ required: true })
+  public obtainmentTimestamp!: number;
 }
-export const APITokenModel = getModelForClass(APIToken)
+export const APITokenModel = getModelForClass(APIToken);
 
 export class TwitchTokens implements ITwitchToken {
   @prop({ required: true })
@@ -25,4 +34,4 @@ export class TwitchTokens implements ITwitchToken {
   public expiryTimestamp!: number;
 }
 
-export const TwitchTokensModel = getModelForClass(TwitchTokens)
+export const TwitchTokensModel = getModelForClass(TwitchTokens);

@@ -14,5 +14,7 @@ export interface IAPIToken {
   //* Required
   accessToken: string;
   refreshToken: string;
+  expiresIn: number;
+  obtainmentTimestamp: number;
   expiryTimestamp: number;
 }

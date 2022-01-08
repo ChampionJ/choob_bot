@@ -18,12 +18,19 @@ import {
   registerEvents,
 } from "./utils/registry";
 import StateManager from "./utils/StateManager";
-import { RefreshableAuthProvider, StaticAuthProvider } from "twitch-auth";
-import { APITokenModel } from "./structures/databaseTypes/schemas/TwitchTokens";
+import {
+  AccessToken,
+  RefreshingAuthProvider,
+  StaticAuthProvider,
+} from "@twurple/auth";
+import {
+  APIToken,
+  APITokenModel,
+} from "./structures/databaseTypes/schemas/TwitchTokens";
 import { TwitchChannelConfigModel } from "./structures/databaseTypes/schemas/TwitchChannelConfig";
 import { TwitchManager } from "./twitch/TwitchClientManager";
 import { ChoobLogger } from "./utils/ChoobLogger";
-import { ApiClient } from "twitch";
+import { ApiClient } from "@twurple/api";
 import { createCipheriv, randomBytes, scrypt } from "crypto";
 import { promisify } from "util";
 
@@ -36,10 +43,10 @@ let discordClient: DiscordManager;
 let twitchManager: TwitchManager;
 
 async function main() {
-  setupDiscord();
   if (process.env.LOGGING_LEVEL !== "DEVELOPMENT") {
-    setupTwitch();
+    setupDiscord();
   }
+  setupTwitch();
 }
 main();
 
@@ -77,34 +84,74 @@ async function setupTwitch() {
   if (!tokenData) {
     return;
   }
+  const tokenDataPure: AccessToken = {
+    accessToken: tokenData.accessToken,
+    refreshToken:
+      tokenData.refreshToken === undefined ? null : tokenData.refreshToken,
+    expiresIn: tokenData.expiresIn === undefined ? null : tokenData.expiresIn,
+    scope: ["chat:read", "chat:edit"],
+    obtainmentTimestamp: 0,
+  };
 
-  const auth = new RefreshableAuthProvider(
-    new StaticAuthProvider(clientId, tokenData.accessToken),
+  const auth = new RefreshingAuthProvider(
     {
+      clientId,
       clientSecret,
-      refreshToken: tokenData.refreshToken,
-      expiry:
-        tokenData.expiryTimestamp === null
-          ? null
-          : new Date(tokenData.expiryTimestamp),
-      onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
-        const newTokenData = {
-          accessToken,
-          refreshToken,
-          expiryTimestamp:
-            expiryDate === null ? undefined : expiryDate.getTime(),
-        };
+      onRefresh: async (newTokenData) =>
+        // await fs.writeFile(
+        //   "./tokens.json",
+        //   JSON.stringify(newTokenData, null, 4),
+        //   "UTF-8"
+        // ),
+
         await APITokenModel.updateOne(
           { identifier: identifier },
           {
-            accessToken: newTokenData.accessToken,
-            refreshToken: newTokenData.refreshToken,
-            expiryTimestamp: newTokenData.expiryTimestamp,
+            accessToken:
+              newTokenData.accessToken === null
+                ? undefined
+                : newTokenData.accessToken,
+            refreshToken:
+              newTokenData.refreshToken === null
+                ? undefined
+                : newTokenData.refreshToken,
+            expiresIn:
+              newTokenData.expiresIn === null
+                ? undefined
+                : newTokenData.expiresIn,
           }
-        );
-      },
-    }
+        ),
+    },
+    tokenDataPure
   );
+
+  // const auth = new RefreshingAuthProvider(
+  //   new StaticAuthProvider(clientId, tokenData.accessToken),
+  //   {
+  //     clientSecret,
+  //     refreshToken: tokenData.refreshToken,
+  //     expiry:
+  //       tokenData.expiryTimestamp === null
+  //         ? null
+  //         : new Date(tokenData.expiryTimestamp),
+  //     onRefresh: async ({ accessToken, refreshToken, expiryDate }) => {
+  //       const newTokenData = {
+  //         accessToken,
+  //         refreshToken,
+  //         expiryTimestamp:
+  //           expiryDate === null ? undefined : expiryDate.getTime(),
+  //       };
+  //       await APITokenModel.updateOne(
+  //         { identifier: identifier },
+  //         {
+  //           accessToken: newTokenData.accessToken,
+  //           refreshToken: newTokenData.refreshToken,
+  //           expiryTimestamp: newTokenData.expiryTimestamp,
+  //         }
+  //       );
+  //     },
+  //   }
+  // );
 
   const channels: string[] = [];
   await TwitchChannelConfigModel.find({ botIsInChannel: true })
@@ -118,7 +165,7 @@ async function setupTwitch() {
     })
     .catch((err) => ChoobLogger.error(err));
 
-  twitchManager = new TwitchManager(auth, { channels: channels });
+  twitchManager = new TwitchManager({ authProvider: auth, channels: channels });
 
   StateManager.on("ready", () => {
     ChoobLogger.debug("onReady");

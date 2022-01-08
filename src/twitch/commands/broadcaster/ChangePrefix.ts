@@ -1,10 +1,10 @@
-import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchChannelConfigModel } from "../../../structures/databaseTypes/schemas/TwitchChannelConfig";
 import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from "../../../utils/StateManager";
 import { BaseTwitchCommand } from "../../../structures/commands/BaseCommand";
 import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
 import { ChoobLogger } from "../../../utils/ChoobLogger";
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 export default class ChangePrefixCommand extends BaseTwitchCommand {
   constructor() {
     super(

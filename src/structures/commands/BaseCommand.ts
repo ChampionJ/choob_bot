@@ -1,4 +1,4 @@
-import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 import { ChoobLogger } from "../../utils/ChoobLogger";
 import { TwitchManager } from "../../twitch/TwitchClientManager";
 import { ChannelPermissionLevel } from "../databaseTypes/interfaces/ICommand";

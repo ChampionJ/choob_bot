@@ -1,10 +1,10 @@
-import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
 import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from "../../../utils/StateManager";
 import { BaseTwitchCommand } from "../../../structures/commands/BaseCommand";
 import { ChannelPermissionLevel } from "../../../structures/databaseTypes/interfaces/ICommand";
 import { ChoobRole } from "../../../structures/databaseTypes/interfaces/IUser";
 import { ChoobLogger } from "../../../utils/ChoobLogger";
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 
 export default class AdminTestCommand extends BaseTwitchCommand {
   constructor() {

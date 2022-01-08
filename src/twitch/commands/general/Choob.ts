@@ -1,4 +1,4 @@
-import { TwitchPrivateMessage } from "twitch-chat-client/lib/StandardCommands/TwitchPrivateMessage";
+import { TwitchPrivateMessage } from "@twurple/chat/lib/commands/TwitchPrivateMessage";
 import { TwitchManager } from "../../TwitchClientManager";
 import StateManager from "../../../utils/StateManager";
 import { BaseTwitchCommand } from "../../../structures/commands/BaseCommand";
