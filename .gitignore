@@ -63,3 +63,4 @@ secrets.json
 localdata.json
 ecosystem.config.js
 /dist
+choobbot-pm2.json
