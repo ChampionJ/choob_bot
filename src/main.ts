@@ -5,7 +5,6 @@ import {
   Client,
   Collection,
   Guild,
-  Intents,
   Message,
   MessageReaction,
   Role,
@@ -44,9 +43,9 @@ let twitchManager: TwitchManager;
 
 async function main() {
   if (process.env.LOGGING_LEVEL !== "DEVELOPMENT") {
-    setupDiscord();
+    setupTwitch();
   }
-  setupTwitch();
+  setupDiscord();
 }
 main();
 

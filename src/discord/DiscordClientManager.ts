@@ -1,20 +1,15 @@
 import { mongoose, DocumentType } from "@typegoose/typegoose";
-
-import { Routes } from "discord-api-types/v9";
 import {
   ApplicationCommandData,
-  ApplicationCommandPermissionData,
   Client,
   Collection,
+  GatewayIntentBits,
   Guild,
-  GuildApplicationCommandPermissionData,
-  Intents,
   Message,
   MessageReaction,
   Role,
   User,
 } from "discord.js";
-import { REST } from "@discordjs/rest";
 import { ChangeEvent } from "mongodb";
 import { BaseDiscordCommand } from "../structures/commands/BaseCommand";
 import BaseEvent from "../structures/commands/BaseEvent";
@@ -48,9 +43,9 @@ export class DiscordManager extends Client implements IClientManager {
   constructor() {
     super({
       intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
       ],
     });
 
@@ -233,48 +228,48 @@ export class DiscordManager extends Client implements IClientManager {
       );
     });
 
-    if (fetchedGlobalCommands) {
-      ChoobLogger.debug(
-        `Fetched ${fetchedGlobalCommands.size} application commands`
-      );
-      let fullPermissions: GuildApplicationCommandPermissionData[] = [];
-      fetchedGlobalCommands.each(async (value, key) => {
-        let permissions: GuildApplicationCommandPermissionData | undefined;
-        ChoobLogger.debug(`Setting permissions for ${value.id} ${value.name}`);
-        if (this.hardcodedCommandsByName.has(value.name)) {
-          const discCommand = this.hardcodedCommandsByName.get(value.name)!;
-          permissions = await discCommand.getSlashCommandPermissionsForGuild(
-            value.id,
-            guild.id,
-            guild.roles.everyone.id
-          );
-          // ChoobLogger.debug(`hardcoded `, permissions);
-        } else if (this.globalDatabaseCommandsByName.has(value.name)) {
-          permissions = await this.globalDatabaseCommandsByName
-            .get(value.name)!
-            .getSlashCommandPermissionsForGuild(value.id, guild.id);
-          // ChoobLogger.debug(`database `, permissions);
-        }
-        if (permissions !== undefined) {
-          //ChoobLogger.debug(`not null`, permissions);
-          fullPermissions.push(permissions);
-        }
-        // ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
-        await guild.commands.permissions
-          .set({ fullPermissions })
-          .then(() =>
-            ChoobLogger.info(
-              `Set guild command permission for command: "${value.name}" in guild: ${guild.id}`
-            )
-          )
-          .catch((err) =>
-            ChoobLogger.error(
-              `Failed to set guild command permissions for command: "${value.name}" in guild: ${guild.id}`,
-              err
-            )
-          );
-      });
-    }
+    // if (fetchedGlobalCommands) {
+    //   ChoobLogger.debug(
+    //     `Fetched ${fetchedGlobalCommands.size} application commands`
+    //   );
+    //   let fullPermissions: GuildApplicationCommandPermissionData[] = [];
+    //   fetchedGlobalCommands.each(async (value, key) => {
+    //     let permissions: GuildApplicationCommandPermissionData | undefined;
+    //     ChoobLogger.debug(`Setting permissions for ${value.id} ${value.name}`);
+    //     if (this.hardcodedCommandsByName.has(value.name)) {
+    //       const discCommand = this.hardcodedCommandsByName.get(value.name)!;
+    //       permissions = await discCommand.getSlashCommandPermissionsForGuild(
+    //         value.id,
+    //         guild.id,
+    //         guild.roles.everyone.id
+    //       );
+    //       // ChoobLogger.debug(`hardcoded `, permissions);
+    //     } else if (this.globalDatabaseCommandsByName.has(value.name)) {
+    //       permissions = await this.globalDatabaseCommandsByName
+    //         .get(value.name)!
+    //         .getSlashCommandPermissionsForGuild(value.id, guild.id);
+    //       // ChoobLogger.debug(`database `, permissions);
+    //     }
+    //     if (permissions !== undefined) {
+    //       //ChoobLogger.debug(`not null`, permissions);
+    //       fullPermissions.push(permissions);
+    //     }
+    //     // ChoobLogger.debug(`Set guild permissions: `, fullPermissions);
+    //     await guild.commands.permissions
+    //       .set({ fullPermissions })
+    //       .then(() =>
+    //         ChoobLogger.info(
+    //           `Set guild command permission for command: "${value.name}" in guild: ${guild.id}`
+    //         )
+    //       )
+    //       .catch((err) =>
+    //         ChoobLogger.error(
+    //           `Failed to set guild command permissions for command: "${value.name}" in guild: ${guild.id}`,
+    //           err
+    //         )
+    //       );
+    //   });
+    // }
   }
   async updateRestCommands() {
     //! These are GLOBAL commands, and should be on every guild

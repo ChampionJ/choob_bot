@@ -14,15 +14,13 @@ import { ChoobLogger } from "../../utils/ChoobLogger";
 import { DiscordManager } from "../../discord/DiscordClientManager";
 import {
   ApplicationCommandData,
-  ApplicationCommandPermissionData,
   ColorResolvable,
   CommandInteraction,
-  GuildApplicationCommandPermissionData,
+  EmbedBuilder,
   Interaction,
   Message,
-  MessageEmbed,
+  SlashCommandBuilder,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { DGSCommandReactionRoleCheckModel } from "../databaseTypes/schemas/DiscordGuildSettings";
 
 export class TwitchGlobalChoobCommand extends BaseTwitchCommand {
@@ -94,6 +92,7 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
   constructor(private _data: DiscordGlobalSimpleCommand) {
     super(
       _data.name!,
+      _data.description!,
       undefined,
       _data.guildPermissionLevelRequired,
       undefined,
@@ -107,16 +106,10 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
   getSlashCommand() {
     return new SlashCommandBuilder()
       .setName(this.getName())
-      .setDescription(" ");
+      .setDescription(this.getDescription());
   }
   getApplicationCommand(): ApplicationCommandData {
-    return { description: " ", name: this.getName() };
-  }
-  async getSlashCommandPermissionsForGuild(
-    commandId: string,
-    guildId: string
-  ): Promise<GuildApplicationCommandPermissionData | undefined> {
-    return undefined;
+    return { description: this.getDescription(), name: this.getName() };
   }
 
   async run(client: DiscordManager, message: Message, args: Array<string>) {
@@ -125,7 +118,7 @@ export class DiscordGlobalChoobCommand extends BaseDiscordCommand {
       message,
       args
     );
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setColor(this.data.embedColor as ColorResolvable)
       .setDescription(replyMessage);
     message.channel.send({ embeds: [embed] });
@@ -151,6 +144,7 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
   constructor(private _data: DiscordCustomCommand) {
     super(
       _data.name!,
+      _data.description!,
       undefined,
       _data.guildPermissionLevelRequired,
       _data.guildRoleIDRequired,
@@ -165,24 +159,10 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
   getSlashCommand() {
     return new SlashCommandBuilder()
       .setName(this.getName())
-      .setDescription(" ");
+      .setDescription(this.getDescription());
   }
   getApplicationCommand(): ApplicationCommandData {
-    return { description: " ", name: this.getName() };
-  }
-  async getSlashCommandPermissionsForGuild(
-    commandId: string,
-    guildId: string
-  ): Promise<GuildApplicationCommandPermissionData | undefined> {
-    if (this.data.guildRoleIDRequired) {
-      let perms = await this.getSlashCommandPermissionsForRoles(
-        this.data.guildRoleIDRequired,
-        true
-      );
-      return { id: commandId, permissions: [...perms] };
-    }
-
-    return undefined;
+    return { description: this.getDescription(), name: this.getName() };
   }
 
   async runInteraction(
@@ -202,7 +182,7 @@ export class DiscordBaseSimpleCommand extends BaseDiscordCommand {
       args
     );
 
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setColor(this.data.embedColor as ColorResolvable)
       .setDescription(replyMessage);
     message.channel.send({ embeds: [embed] });

@@ -47,6 +47,8 @@ export class DiscordCustomCommand implements IDiscordCustomCommand {
   @prop({ required: true })
   name!: string;
   @prop({ required: true })
+  description!: string;
+  @prop({ required: true })
   guildId!: string;
   @prop({ required: true, default: "#FFFFFF" })
   embedColor!: string;
@@ -91,6 +93,8 @@ export class DiscordGlobalSimpleCommand implements IDiscordChoobCommand {
   _id!: mongoose.Types.ObjectId;
   @prop({ required: true, unique: true })
   name!: string;
+  @prop({ required: true, unique: true })
+  description!: string;
   @prop({ type: [String], default: [] })
   aliases!: string[];
   @prop({ required: true })

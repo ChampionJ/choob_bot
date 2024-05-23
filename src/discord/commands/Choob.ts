@@ -1,10 +1,9 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import {
   ApplicationCommandData,
   CommandInteraction,
-  GuildApplicationCommandPermissionData,
+  EmbedBuilder,
   Message,
-  MessageEmbed,
+  SlashCommandBuilder,
 } from "discord.js";
 import { BaseDiscordCommand } from "../../structures/commands/BaseCommand";
 import { ChoobLogger } from "../../utils/ChoobLogger";
@@ -12,23 +11,16 @@ import StateManager from "../../utils/StateManager";
 import { DiscordManager } from "../DiscordClientManager";
 
 export default class ChoobCommand extends BaseDiscordCommand {
-  async getSlashCommandPermissionsForGuild(
-    commandId: string,
-    guildId: string,
-    everyoneRoleId: string
-  ): Promise<GuildApplicationCommandPermissionData | undefined> {
-    return undefined;
-  }
   constructor() {
-    super("choob", undefined, undefined, undefined, []);
+    super("choob", "Say a choob quote!", undefined, undefined, undefined, []);
   }
   getSlashCommand() {
     return new SlashCommandBuilder()
       .setName(this.getName())
-      .setDescription(" ");
+      .setDescription(this.getDescription());
   }
   getApplicationCommand(): ApplicationCommandData {
-    return { description: " ", name: this.getName() };
+    return { description: this.getDescription(), name: this.getName() };
   }
   async runInteraction(
     client: DiscordManager,
@@ -48,7 +40,7 @@ export default class ChoobCommand extends BaseDiscordCommand {
       StateManager.choobs[Math.floor(Math.random() * choobIndexCount)];
 
     if (choobQuote) {
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setColor(0xffffff)
         .setDescription(
           choobQuote!.quote!.replace("{user}", message.member?.displayName!)

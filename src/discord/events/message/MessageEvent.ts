@@ -1,4 +1,11 @@
-import { Message, MessageEmbed, Permissions, TextChannel } from "discord.js";
+import {
+  ChannelType,
+  Message,
+  PermissionFlagsBits,
+  Permissions,
+  PermissionsBitField,
+  TextChannel,
+} from "discord.js";
 import BaseEvent from "../../../structures/commands/BaseEvent";
 import { ChoobRole } from "../../../structures/databaseTypes/interfaces/IUser";
 import { DiscordUserModel } from "../../../structures/databaseTypes/schemas/TwitchUsers";
@@ -12,6 +19,28 @@ export default class MessageEvent extends BaseEvent {
   async run(client: DiscordManager, message: Message) {
     if (message.author.bot) return;
     // ChoobLogger.info(`Message: \n${message}`);
+
+    if (message.channel.type === ChannelType.GuildAnnouncement) {
+      if (message.author.id === "282286160494067712") {
+        const permissions = new PermissionsBitField([
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ManageMessages,
+          PermissionsBitField.Flags.MentionEveryone,
+        ]);
+        if (
+          message.channel
+            .permissionsFor(message.guild?.members.me!)
+            .has(permissions)
+        ) {
+          message
+            .crosspost()
+            .then(() => ChoobLogger.debug("Crossposted message"))
+            .catch(console.error);
+        } else {
+          ChoobLogger.debug("Did not have proper permissions to publish");
+        }
+      }
+    }
 
     return;
 

@@ -7,14 +7,12 @@ import { DiscordManager } from "../../discord/DiscordClientManager";
 import {
   ApplicationCommand,
   ApplicationCommandData,
-  ApplicationCommandPermissionData,
   CommandInteraction,
-  GuildApplicationCommandPermissionData,
   Interaction,
   Message,
   PermissionFlags,
+  SlashCommandBuilder,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
 
 export interface IBaseCommand {
   getName(): string;
@@ -52,6 +50,7 @@ export abstract class BaseTwitchCommand implements IBaseCommand {
 export abstract class BaseDiscordCommand implements IBaseCommand {
   constructor(
     private name: string,
+    private description: string,
     private choobRoleRequired: ChoobRole | undefined,
     private guildPermissionRequired: bigint | undefined,
     private roleRequired: Array<string> | undefined,
@@ -60,6 +59,9 @@ export abstract class BaseDiscordCommand implements IBaseCommand {
 
   getName(): string {
     return this.name;
+  }
+  getDescription(): string {
+    return this.description;
   }
   getGuildPermissionRequired(): bigint | undefined {
     return this.guildPermissionRequired;
@@ -75,25 +77,6 @@ export abstract class BaseDiscordCommand implements IBaseCommand {
   }
   abstract getSlashCommand(): SlashCommandBuilder;
   abstract getApplicationCommand(): ApplicationCommandData;
-  abstract getSlashCommandPermissionsForGuild(
-    commandId: string,
-    guildId: string,
-    everyoneRoleId: string
-  ): Promise<GuildApplicationCommandPermissionData | undefined>;
-  async getSlashCommandPermissionsForRoles(
-    roles: string[],
-    givePermission = true
-  ): Promise<ApplicationCommandPermissionData[]> {
-    let perms: ApplicationCommandPermissionData[] = [];
-    roles.forEach((role) => {
-      perms.push({
-        id: role,
-        type: "ROLE",
-        permission: givePermission,
-      });
-    });
-    return perms;
-  }
 
   abstract run(
     client: DiscordManager,

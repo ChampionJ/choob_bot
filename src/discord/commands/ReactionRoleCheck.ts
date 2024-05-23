@@ -1,13 +1,14 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import {
   Message,
-  MessageEmbed,
   TextChannel,
   Permissions,
   CommandInteraction,
-  ApplicationCommandPermissionData,
-  GuildApplicationCommandPermissionData,
   ApplicationCommandData,
+  EmbedBuilder,
+  ApplicationCommandOptionType,
+  PermissionFlagsBits,
+  PermissionsBitField,
+  SlashCommandBuilder,
 } from "discord.js";
 import { BaseDiscordCommand } from "../../structures/commands/BaseCommand";
 import { ChoobRole } from "../../structures/databaseTypes/interfaces/IUser";
@@ -19,8 +20,9 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
   constructor() {
     super(
       "reactionrolecheck",
+      "Update all users who reacted to a specific message with an emoji to have a role",
       undefined,
-      Permissions.FLAGS.MANAGE_GUILD,
+      PermissionsBitField.Flags.ManageGuild,
       undefined,
       []
     );
@@ -28,7 +30,7 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
   getSlashCommand() {
     return new SlashCommandBuilder()
       .setName(this.getName())
-      .setDescription(" ");
+      .setDescription(this.getDescription());
   }
   getApplicationCommand(): ApplicationCommandData {
     //? 0: channel ID
@@ -36,63 +38,63 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
     //? 2: emoji to check
     //? 3: role ID to assign
     return {
-      description: " ",
+      description: this.getDescription(),
       name: this.getName(),
       options: [
         {
-          type: "CHANNEL",
+          type: ApplicationCommandOptionType.Channel,
           name: "channel",
           description: "Channel where the reaction role message is",
         },
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "messageid",
           description: "The reaction role message ID",
         },
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "emoji",
           description: "The emoji to check",
         },
         {
-          type: "ROLE",
+          type: ApplicationCommandOptionType.Role,
           name: "role",
           description: "The role that should be applied to users",
         },
       ],
-      defaultPermission: false,
+      defaultMemberPermissions: PermissionFlagsBits.Administrator,
     };
   }
-  async getSlashCommandPermissionsForGuild(
-    commandId: string,
-    guildId: string,
-    everyoneRoleId: string
-  ): Promise<GuildApplicationCommandPermissionData | undefined> {
-    let perms: ApplicationCommandPermissionData[] = [];
-    // perms.push(
-    //   ...(await this.getSlashCommandPermissionsForRoles(
-    //     [everyoneRoleId],
-    //     false
-    //   ))
-    // );
+  // async getSlashCommandPermissionsForGuild(
+  //   commandId: string,
+  //   guildId: string,
+  //   everyoneRoleId: string
+  // ): Promise<GuildApplicationCommandPermissionData | undefined> {
+  //   let perms: ApplicationCommandPermissionData[] = [];
+  //   // perms.push(
+  //   //   ...(await this.getSlashCommandPermissionsForRoles(
+  //   //     [everyoneRoleId],
+  //   //     false
+  //   //   ))
+  //   // );
 
-    const setting = await DGSCommandReactionRoleCheckModel.findOne({
-      guildId: guildId,
-    });
-    if (setting !== null && setting.roleIdPermissions) {
-      await setting.roleIdPermissions.forEach(async (role) => {
-        perms.push(
-          ...(await this.getSlashCommandPermissionsForRoles(
-            setting.roleIdPermissions,
-            true
-          ))
-        );
-        ChoobLogger.debug(`Set permission for ${role} as true`);
-      });
-    }
+  //   const setting = await DGSCommandReactionRoleCheckModel.findOne({
+  //     guildId: guildId,
+  //   });
+  //   if (setting !== null && setting.roleIdPermissions) {
+  //     await setting.roleIdPermissions.forEach(async (role) => {
+  //       perms.push(
+  //         ...(await this.getSlashCommandPermissionsForRoles(
+  //           setting.roleIdPermissions,
+  //           true
+  //         ))
+  //       );
+  //       ChoobLogger.debug(`Set permission for ${role} as true`);
+  //     });
+  //   }
 
-    return { id: commandId, permissions: [...perms] };
-  }
+  //   return { id: commandId, permissions: [...perms] };
+  // }
   async runInteraction(
     client: DiscordManager,
     interaction: CommandInteraction
@@ -101,6 +103,9 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
     //   content: "There was an error while executing this command!",
     //   ephemeral: true,
     // });
+    if (!interaction.isChatInputCommand()) {
+      return;
+    }
     const channel = interaction.options.getChannel("channel", true);
     const messageID = interaction.options.getString("messageid", true);
     const emoji = interaction.options.getString("emoji", true);
@@ -141,7 +146,7 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
             usersArray,
             roleToAssign!
           );
-          const embed = new MessageEmbed()
+          const embed = new EmbedBuilder()
             .setTitle("Results")
             .setColor(0xff0000)
             .setDescription(
@@ -164,7 +169,7 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
     //? 3: role ID to assign
 
     if (args.length < 4) {
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle("Error: missing arguments")
         .setColor(0xff0000)
         .setDescription(`Command requires the following arguments:
@@ -182,14 +187,14 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
     );
     if (!roleToAssign) {
       //! No role found
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle("Error")
         .setColor(0xff0000)
         .setDescription(`No valid role found!`);
       message.channel.send({ embeds: [embed] });
       return;
     } else {
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle("Starting role check...")
         .setColor(0xff0000)
         .setDescription(``);
@@ -221,7 +226,7 @@ export default class ReactionRoleCheckCommand extends BaseDiscordCommand {
             usersArray,
             roleToAssign
           );
-          const embed = new MessageEmbed()
+          const embed = new EmbedBuilder()
             .setTitle("Results")
             .setColor(0xff0000)
             .setDescription(
